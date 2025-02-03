@@ -1,0 +1,31 @@
+# Node.js dependencies (Frontend)
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.output/
+frontend/.nuxt/
+frontend/.env.local
+frontend/.DS_Store
+
+# PHP dependencies (Backend)
+backend/vendor/
+backend/.env
+backend/.DS_Store
+
+# Composer files
+backend/composer.lock
+
+# Logs & Cache
+backend/storage/
+backend/bootstrap/cache/
+*.log
+
+# IDE/editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+Thumbs.db
+.DS_Store

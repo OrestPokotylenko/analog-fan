@@ -1,23 +1,23 @@
 # Node.js dependencies (Frontend)
-frontend/node_modules/
-frontend/dist/
-frontend/.vite/
-frontend/.output/
-frontend/.nuxt/
-frontend/.env.local
-frontend/.DS_Store
+app/frontend/node_modules/
+app/frontend/dist/
+app/frontend/.vite/
+app/frontend/.output/
+app/frontend/.nuxt/
+app/frontend/.env.local
+app/frontend/.DS_Store
 
 # PHP dependencies (Backend)
-backend/vendor/
-backend/config/env.php
-backend/.DS_Store
+app/backend/vendor/
+app/backend/config/env.php
+app/backend/.DS_Store
 
 # Composer files
-backend/composer.lock
+app/backend/composer.lock
 
 # Logs & Cache
-backend/storage/
-backend/bootstrap/cache/
+app/backend/storage/
+app/backend/bootstrap/cache/
 *.log
 
 # IDE/editor files

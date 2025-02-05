@@ -9,7 +9,7 @@ frontend/.DS_Store
 
 # PHP dependencies (Backend)
 backend/vendor/
-backend/.env
+backend/config/env.php
 backend/.DS_Store
 
 # Composer files

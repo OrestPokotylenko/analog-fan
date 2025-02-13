@@ -76,4 +76,23 @@ class UserModel extends BaseModel {
             'email' => $user->email
         ]);
     }
+
+    public function authenticateUser($username, $password) {
+        $sql = "SELECT * FROM users WHERE username = ? OR email = ?";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(array($username, $username));
+        $userData = $stmt->fetch();
+    
+        if ($userData && password_verify($password, $userData['password'])) {
+            return new UserDTO(
+                $userData['first_name'],
+                $userData['last_name'],
+                $userData['username'],
+                $userData['email'],
+                $userData['user_id']
+            );
+        }
+    
+        return null;
+    }
 }

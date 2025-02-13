@@ -2,12 +2,15 @@
 
 require_once(__DIR__ . '/../DTO/UserDTO.php');
 require_once(__DIR__ . '/../Model/UserModel.php');
+require_once(__DIR__ . '/../Service/JWTService.php');
 
 class UserController {
     private UserModel $userModel;
+    private JWTService $jwtService;
 
     public function __construct() {
         $this->userModel = new UserModel();
+        $this->jwtService = new JWTService();
     }
 
     public function getUsers() {
@@ -39,5 +42,16 @@ class UserController {
         );
         
         $this->userModel->updateUser($user);
+    }
+
+    public function authenticateUser($username, $password) {
+        $user = $this->userModel->authenticateUser($username, $password);
+
+        if ($user) {
+            $jwt = $this->jwtService->generateJWT($user);
+            return ['token' => $jwt, 'user' => $user];
+        }
+
+        return null;
     }
 }

@@ -17,8 +17,8 @@
               Categories
             </router-link>
             <ul class="dropdown-menu" aria-labelledby="categoriesDropdown">
-              <li><router-link to="/categories/cassetes" class="dropdown-item">Cassettes</router-link></li>
-              <li><router-link to="/categories/vinyl" class="dropdown-item">Vinyl</router-link></li>
+              <li><router-link to="/categories/cassettes" class="dropdown-item">Cassettes</router-link></li>
+              <li><router-link to="/categories/vinyls" class="dropdown-item">Vinyl</router-link></li>
               <li><router-link to="/categories/players" class="dropdown-item">Players</router-link></li>
             </ul>
           </li>
@@ -30,7 +30,10 @@
         </form>
         <div class="ms-auto">
           <button v-if="!isLoggedIn" class="btn btn-outline-primary" @click="login">Login</button>
-          <div v-else class="navbar-text">Welcome, {{ username }}</div>
+          <div v-else class="navbar-text">
+            Welcome, {{ user ? user.username : '' }}
+            <button class="btn btn-outline-danger ms-2" @click="logout">Logout</button>
+          </div>
         </div>
       </div>
     </div>
@@ -44,14 +47,29 @@ export default {
       searchQuery: ''
     };
   },
+  computed: {
+    isLoggedIn() {
+      return this.$auth.isLoggedIn;
+    },
+    user() {
+      return this.$auth.user;
+    }
+  },
   methods: {
     search() {
       console.log('Searching for:', this.searchQuery);
       // Implement your search logic here
     },
-
     login() {
       this.$router.push('/login');
+    },
+    logout() {
+      localStorage.removeItem('jwtToken');
+      localStorage.removeItem('user');
+      this.$auth.isLoggedIn = false;
+      this.$auth.token = null;
+      this.$auth.user = null;
+      this.$router.push('/');
     }
   }
 };

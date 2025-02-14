@@ -4,6 +4,15 @@ require_once(__DIR__ . '/BaseModel.php');
 require_once(__DIR__ . '/../DTO/UserDTO.php');
 
 class UserModel extends BaseModel {
+    public function userExists($username, $email) {
+        $sql = "SELECT * FROM users WHERE username = :username OR email = :email";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(array('username' => $username, 'email' => $email));
+        $userData = $stmt->fetch();
+
+        return $userData ? true : false;
+    }
+
     public function getUsers() {
         $sql = "SELECT * FROM users";
         $stmt = $this->pdo->query($sql);
@@ -49,7 +58,7 @@ class UserModel extends BaseModel {
 
     public function createUser(UserDTO $user, string $password) {
         try{
-            $sql = "INSERT INTO users (first_name, last_name, username, email) VALUES (:first_name, :last_name, :username, :email)";
+            $sql = "INSERT INTO users (first_name, last_name, username, email, password) VALUES (:first_name, :last_name, :username, :email, :password)";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([
                 'first_name' => $user->firstName,
@@ -59,10 +68,10 @@ class UserModel extends BaseModel {
                 'password' => password_hash($password, PASSWORD_DEFAULT)
             ]);
         } catch (PDOException $e) {
-            return false;            
+            return null;            
         }
 
-        return true;
+        return $user;
     }
 
     public function updateUser(UserDTO $user) {

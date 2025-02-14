@@ -5,7 +5,7 @@
         <h3>Login</h3>
       </div>
       <div class="card-body">
-        <form @submit.prevent="login">
+        <form @submit.prevent="handleLogin">
           <div class="mb-3">
             <label for="username" class="form-label">Username</label>
             <input type="text" class="form-control" id="username" v-model="username" required />
@@ -33,12 +33,10 @@ export default {
     return {
       username: '',
       password: '',
-      user: null,
-      token: ''
     };
   },
   methods: {
-    async login() {
+    async handleLogin() {
       try {
         const response = await axios.get('http://localhost/api/authenticate', {
           params: {
@@ -47,15 +45,20 @@ export default {
           }
         });
 
-        this.user = response.data.user;
-        this.token = response.data.token;
+        if (response.data.success) {
+          localStorage.setItem('jwtToken', response.data.token);
+          localStorage.setItem('user', JSON.stringify(response.data.user));
 
-        localStorage.setItem('jwtTocken', this.token);
+          this.$root.$auth.isLoggedIn = true;
+          this.$root.$auth.token = response.data.token;
+          this.$root.$auth.user = response.data.user;
 
-        this.$router.push('/');
-
+          this.$router.push('/');
+        } else {
+          console.error('Login failed:', response.data.message);
+        }
       } catch (error) {
-        console.error(error);
+        console.error('Error during login:', error);
       }
     }
   }

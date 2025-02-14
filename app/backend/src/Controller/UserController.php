@@ -13,6 +13,10 @@ class UserController {
         $this->jwtService = new JWTService();
     }
 
+    public function userExists($username, $email) {
+        return $this->userModel->userExists($username, $email);
+    }
+
     public function getUsers() {
         return $this->userModel->getUsers();
     }
@@ -22,6 +26,10 @@ class UserController {
     }
 
     public function createUser($userData) {
+        if ($userData['password'] !== $userData['repeatPassword']) {
+            return null;   
+        }
+
         $user = new UserDTO(
             $userData['firstName'],
             $userData['lastName'],

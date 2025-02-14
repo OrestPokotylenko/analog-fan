@@ -18,7 +18,7 @@
         </form>
       </div>
       <div class="d-flex justify-content-between">
-        <router-link to="/register">Register</router-link>
+        <router-link to="/signup">Sign up</router-link>
         <router-link to="/forgot-password">Forgot Password?</router-link>
       </div>
     </div>

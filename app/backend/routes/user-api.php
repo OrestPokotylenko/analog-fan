@@ -16,8 +16,19 @@ Route::add('/api/users/{id}', function($id) use ($userController) {
 
 Route::add('/api/users', function() use ($userController) {
     $userData = json_decode(file_get_contents('php://input'), true);
-    $success = $userController->createUser($userData);
-    json_encode(['success' => $success]);
+    $userExists = $userController->userExists($userData['username'], $userData['email']);
+
+    if (!$userExists) {
+        $createdUser = $userController->createUser($userData);
+
+        if ($createdUser) {
+            echo json_encode(['success' => true, 'user' => $createdUser]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Passwords do not match']);
+        }
+    } else {
+        echo json_encode(['success' => false, 'message' => 'User already exists']);
+    }
 }, 'post');
 
 Route::add('/api/users/{id}', function($id) use ($userController) {

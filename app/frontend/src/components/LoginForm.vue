@@ -19,7 +19,7 @@
       </div>
       <div class="d-flex justify-content-between">
         <router-link to="/signup">Sign up</router-link>
-        <router-link to="/forgot-password">Forgot Password?</router-link>
+        <router-link to="/reset-password">Forgot Password?</router-link>
       </div>
     </div>
   </div>

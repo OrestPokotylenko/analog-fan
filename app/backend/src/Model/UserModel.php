@@ -86,6 +86,15 @@ class UserModel extends BaseModel {
         ]);
     }
 
+    public function resetPassword($userId, $password) {
+        $sql = "UPDATE users SET password = :password WHERE user_id = :user_id";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            'user_id' => $userId,
+            'password' => password_hash($password, PASSWORD_DEFAULT)
+        ]);
+    }
+
     public function authenticateUser($username, $password) {
         $sql = "SELECT * FROM users WHERE username = ? OR email = ?";
         $stmt = $this->pdo->prepare($sql);
@@ -102,6 +111,25 @@ class UserModel extends BaseModel {
             );
         }
     
+        return null;
+    }
+
+    public function getUserByEmail($email) {
+        $sql = "SELECT * FROM users WHERE email = :email";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['email' => $email]);
+        $userData = $stmt->fetch();
+
+        if ($userData) {
+            return new UserDTO(
+                $userData['first_name'],
+                $userData['last_name'],
+                $userData['username'],
+                $userData['email'],
+                $userData['user_id']
+            );
+        } 
+
         return null;
     }
 }

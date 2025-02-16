@@ -2,9 +2,13 @@
 
 require_once(__DIR__ . '/../src/Controller/UserController.php');
 require_once(__DIR__ . '/../src/Service/JWTService.php');
+require_once(__DIR__ . '/../src/Service/PasswordResetService.php');
+require_once(__DIR__ . '/../src/Controller/LinkController.php');
 
 $userController = new UserController();
 $jwtService = new JWTService();
+$passwordResetService = new PasswordResetService();
+$linkController = new LinkController();
 
 Route::add('/api/users', function() use ($userController) {
     echo json_encode($userController->getUsers());
@@ -64,3 +68,25 @@ Route::add('/api/protected', function () use ($jwtService) {
         echo json_encode(['success' => false, 'message' => 'No token provided']);
     }
 }, 'get');
+
+Route::add('/api/reset-password', function () use ($passwordResetService) {
+    $email = $_GET['email'];
+    $result = $passwordResetService->requestPasswordReset($email);
+
+    if ($result) {
+        echo json_encode(['success' => true, 'message' => 'Reset link sent']);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'User not found']);
+    }
+}, 'get');
+
+Route::add('/api/validate-token', function () use ($linkController) {
+    $token = $_GET['token'];
+    $result = $linkController->validLink($token);
+    echo json_encode(['isValid' => $result]);
+});
+
+Route::add('/api/reset-password', function () use ($passwordResetService) {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $passwordResetService->resetPassword($data['token'], $data['password']);
+}, 'put');

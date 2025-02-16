@@ -4,6 +4,7 @@ const routes = [
   { path: '/', component: () => import('../views/Home.vue') },
   { path: '/login', component: () => import('../views/Login.vue') },
   { path: '/signup', component: () => import('../views/Signup.vue') },
+  { path: '/reset-password', component: () => import('../views/ResetPassword.vue') },
   { path: '/categories', component: () => import('../views/Categories.vue') },
   { path: '/categories/cassettes', component: () => import('../views/Cassettes.vue') },
   { path: '/categories/vinyls', component: () => import('../views/Vinyls.vue') },

@@ -16,6 +16,11 @@
       <div class="d-flex justify-content-center">
         <router-link to="/login">Would you like to login?</router-link>
       </div>
+      <div class="mt-3" style="height: 48px;">
+        <div v-if="errorMessage" :class="{ 'alert': true, 'alert-danger': !success, 'alert-success': success }">
+          {{ errorMessage }}
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -26,13 +31,15 @@ import axios from 'axios';
 export default {
   data() {
     return {
-      email: ''
+      email: '',
+      errorMessage: '',
+      success: false
     };
   },
   methods: {
     async resetPassword() {
       resetButon.disabled = true;
-      
+
       try {
         const response = await axios.get('http://localhost/api/reset-password', {
           params: {
@@ -40,11 +47,17 @@ export default {
           }
         });
 
-        console.log(response);
-        this.$router.push('/login');
+        if (response.data.success) {
+          this.success = true;
+          this.errorMessage = response.data.message;
+          this.$router.push('/login');
+        } else {
+          this.success = false;
+          this.errorMessage = response.data.message;
+        }
 
       } catch (error) {
-        console.error('Error during login:', error);
+        this.errorMessage = "An error occurred. Please try again.";
       }
     }
   }

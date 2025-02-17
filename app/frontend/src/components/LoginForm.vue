@@ -21,6 +21,9 @@
         <router-link to="/signup">Sign up</router-link>
         <router-link to="/reset-password">Forgot Password?</router-link>
       </div>
+      <div class="mt-3" style="height: 48px;">
+        <div v-if="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+      </div>
     </div>
   </div>
 </template>
@@ -33,6 +36,7 @@ export default {
     return {
       username: '',
       password: '',
+      errorMessage: ''
     };
   },
   methods: {
@@ -55,10 +59,10 @@ export default {
 
           this.$router.push('/');
         } else {
-          console.error('Login failed:', response.data.message);
+          this.errorMessage = response.data.message;
         }
       } catch (error) {
-        console.error('Error during login:', error);
+        this.errorMessage = 'An error occurred during login. Please try again.';
       }
     }
   }

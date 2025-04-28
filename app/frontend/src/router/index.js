@@ -5,10 +5,10 @@ const routes = [
   { path: '/login', component: () => import('../views/Login.vue') },
   { path: '/signup', component: () => import('../views/Signup.vue') },
   { path: '/reset-password', component: () => import('../views/ResetPassword.vue') },
-  { path: '/categories', component: () => import('../views/Categories.vue') },
-  { path: '/categories/cassettes', component: () => import('../views/Cassettes.vue') },
-  { path: '/categories/vinyls', component: () => import('../views/Vinyls.vue') },
-  { path: '/categories/players', component: () => import('../views/Players.vue') }
+  { path: '/category', component: () => import('../views/Categories.vue') },
+  { path: '/category/cassettes', component: () => import('../views/Cassettes.vue') },
+  { path: '/category/vinyls', component: () => import('../views/Vinyls.vue') },
+  { path: '/category/players', component: () => import('../views/Players.vue') }
 ];
 
 const router = createRouter({

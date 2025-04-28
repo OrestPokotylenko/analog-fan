@@ -1,6 +1,8 @@
 <template>
   <Header />
-  <LoginForm />
+  <div class="center flex-grow-1">
+    <LoginForm />
+  </div>
 </template>
 
 <script>
@@ -13,5 +15,6 @@ export default {
     LoginForm
   }
 };
-
 </script>
+
+<style></style>

@@ -1,6 +1,8 @@
 <template>
     <Header />
-    <SignupForm />
+    <div class="content justify-content-center">
+        <SignupForm />
+    </div>
 </template>
 
 <script>

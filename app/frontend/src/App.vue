@@ -1,37 +1,29 @@
+<script setup>
+</script>
+
 <template>
   <router-view />
 </template>
 
-<script>
-
-export default {
-
-};
-
-</script>
-
 <style>
-/* html, body {
-  height: 100%;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-}
-
 #app {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  width: 100%;
-  margin: 40px 80px;
+  margin: 0;
   padding: 0;
+  max-width: 100%;
+  min-height: 100vh;
 }
 
-router-view {
-  flex: 1;
+body {
+  display: block;
+  place-items: unset;
+}
+
+.content {
   display: flex;
   flex-direction: column;
-  width: 100%;
-} */
-
+  height: 100%;
+  margin: 100px 50px;
+}
 </style>

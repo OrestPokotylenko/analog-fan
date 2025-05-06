@@ -1,34 +1,38 @@
 <template>
   <header class="navbar navbar-expand-lg navbar-light bg-light fixed-top w-100">
     <div class="container-fluid">
-      <router-link to="/" class="navbar-brand">Analog-fan</router-link>
+      <RouterLink to="/" class="navbar-brand">Analog-fan</RouterLink>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
         aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
-      <div class="collapse navbar-collapse d-flex justify-content-between align-items-center" id="navbarNav">
+      <div class="collapse navbar-collapse d-flex" id="navbarNav">
         <ul class="navbar-nav ms-auto">
           <li class="nav-item dropdown">
-            <router-link to="/category" class="nav-link dropdown-toggle" id="categoriesDropdown" role="button" aria-expanded="false">
+            <RouterLink to="/category" class="nav-link dropdown-toggle" id="categoriesDropdown" role="button"
+              aria-expanded="false">
               Categories
-            </router-link>
+            </RouterLink>
             <ul class="dropdown-menu" aria-labelledby="categoriesDropdown">
-              <li><router-link to="/category/cassettes" class="dropdown-item">Cassettes</router-link></li>
-              <li><router-link to="/category/vinyls" class="dropdown-item">Vinyl</router-link></li>
-              <li><router-link to="/category/players" class="dropdown-item">Players</router-link></li>
+              <li><RouterLink to="/category/cassettes" class="dropdown-item">Cassettes</RouterLink></li>
+              <li><RouterLink to="/category/vinyls" class="dropdown-item">Vinyl</RouterLink></li>
+              <li><RouterLink to="/category/players" class="dropdown-item">Players</RouterLink></li>
             </ul>
           </li>
         </ul>
         <form class="d-flex mx-5 search-form" @submit.prevent="search">
           <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search"
             v-model="searchQuery" />
-          <button class="btn btn-outline-success" type="submit">Search</button>
+          <button class="btn btn-outline-success nav-button" type="submit">Search</button>
         </form>
-        <div class="ms-auto">
-          <button v-if="!isLoggedIn" class="btn btn-outline-primary" @click="login">Login</button>
+        <RouterLink to="/your-items" class="btn btn-outline-primary nav-button">Sell</RouterLink>
+        <RouterLink to="/cart" class="btn btn-outline-secondary ms-auto nav-button">Cart</RouterLink>
+        <RouterLink to="/watchlist" class="btn btn-outline-secondary ms-5 nav-button">Watchlist</RouterLink>
+        <div class="ms-5">
+          <button v-if="!isLoggedIn" class="btn btn-outline-primary nav-button" @click="login">Login</button>
           <div v-else class="navbar-text">
             Welcome, {{ user ? user.username : '' }}
-            <button class="btn btn-outline-danger ms-2" @click="logout">Logout</button>
+            <button class="btn btn-outline-danger ms-2 nav-button" @click="logout">Logout</button>
           </div>
         </div>
       </div>
@@ -86,5 +90,9 @@ header {
 
 .nav-item.dropdown:hover .dropdown-menu {
   display: block;
+}
+
+.nav-button {
+  width: 90px;
 }
 </style>

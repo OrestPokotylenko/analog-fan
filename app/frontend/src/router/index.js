@@ -8,7 +8,9 @@ const routes = [
   { path: '/category', component: () => import('../views/Categories.vue') },
   { path: '/category/cassettes', component: () => import('../views/Cassettes.vue') },
   { path: '/category/vinyls', component: () => import('../views/Vinyls.vue') },
-  { path: '/category/players', component: () => import('../views/Players.vue') }
+  { path: '/category/players', component: () => import('../views/Players.vue') },
+  { path: '/your-items', component: () => import('../views/SellingItems.vue') },
+  { path: '/your-items/upload', component: () => import('../views/UploadItem.vue') }
 ];
 
 const router = createRouter({

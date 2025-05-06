@@ -1,6 +1,6 @@
 <template>
     <Header />
-    <div>
+    <div class="content justify-content-center">
       <div v-if="isLoading" class="text-center">
         <p>Loading...</p>
       </div>

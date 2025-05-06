@@ -1,6 +1,6 @@
 <?php
 
-require_once(__DIR__ . '/ItemType.php');
+require_once(__DIR__ . '/../Enum/ItemType.php');
 
 class ItemDTO {
     public readonly ?int $itemId;
@@ -19,5 +19,17 @@ class ItemDTO {
         $this->type = $type;
         $this->creationDate = $creationDate;
         $this->imagesPath = $imagesPath;
+    }
+
+    public static function toDTO(array $itemData): self {
+        return new self(
+            $itemData['title'],
+            $itemData['description'],
+            (float)$itemData['price'],
+            ItemType::from($itemData['type']),
+            new DateTime($itemData['creation_date']),
+            json_decode($itemData['images'], true),
+            $itemData['item_id']
+        );
     }
 }

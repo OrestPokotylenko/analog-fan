@@ -1,6 +1,6 @@
 <template>
   <Header />
-  <div class="center flex-grow-1">
+  <div class="content justify-content-center">
     <LoginForm />
   </div>
 </template>

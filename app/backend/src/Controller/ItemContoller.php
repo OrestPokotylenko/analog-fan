@@ -1,6 +1,8 @@
 <?php
 
 require_once(__DIR__ . '/../Model/ItemModel.php');
+require_once(__DIR__ . '/../Enum/ItemType.php');
+require_once(__DIR__ . '/../Service/CloudinaryService.php');
 
 class ItemController {
     private $itemModel;
@@ -11,5 +13,11 @@ class ItemController {
 
     public function getItems() {
         return $this->itemModel->getItems();
+    }
+
+    public function postItem($title, $description, $price, $type, $images) {
+        $cloudinaryService = new CloudinaryService();
+        $imagesPath = $cloudinaryService->uploadImages($images);
+        return $this->itemModel->postItem($title, $description, $price, $type, $imagesPath);
     }
 }

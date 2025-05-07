@@ -39,12 +39,24 @@ async function fetchLikedItems() {
 
 <template>
   <Header />
-  <div class="d-flex flex-wrap">
-    <div v-for="item in items" :key="item.itemId">
-      <ItemCard :item="item" :likedItems="likedItems" />
+  <div class="content">
+    <div class="cards-container">
+      <div v-for="item in items" :key="item.itemId" class="card-wrapper">
+        <ItemCard :item="item" :likedItems="likedItems" />
+      </div>
     </div>
   </div>
 </template>
 
-<style>
+<style scoped>
+.cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.card-wrapper {
+  width: 100%;
+  height: auto;
+}
 </style>

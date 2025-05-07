@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { computed } from 'vue';
 import likeFilled from '../assets/like-filled.svg';
 import likeUnfilled from '../assets/like-unfilled.svg';
 import axios from 'axios';
@@ -60,22 +60,26 @@ async function deleteLikedItem(userId) {
 </script>
 
 <template>
-  <div class="card">
-    <img :src="item.imagesPath[0]" class="item-image" :alt="item.title" />
-    <div class="card-body">
-      <p>{{ item.title }}</p>
-      <div class="d-flex justify-content-between align-items-center">
-        <strong>€{{ item.price }}</strong>
-        <button class="like-button" @click.stop.prevent="likeItem">
-          <img :src="isLiked ? likeFilled : likeUnfilled" class="like-img" />
-        </button>
+  <RouterLink :to="`/item/${item.itemId}`">
+    <div class="card d-flex flex-column justify-content-between">
+      <img :src="item.imagesPath[0]" class="item-image" :alt="item.title" />
+      <div class="card-body">
+        <p>{{ item.title }}</p>
+        <div class="d-flex justify-content-between align-items-center">
+          <strong>€{{ item.price }}</strong>
+          <button class="like-button" @click.stop.prevent="likeItem">
+            <img :src="isLiked ? likeFilled : likeUnfilled" class="like-img" />
+          </button>
+        </div>
       </div>
     </div>
-  </div>
+  </RouterLink>
 </template>
 
 <style scoped>
 .card {
+  width: 300px;
+  height: 410px;
   margin: 10px;
   padding: 10px;
   border: 1px solid #ccc;
@@ -84,13 +88,12 @@ async function deleteLikedItem(userId) {
 }
 
 .item-image {
-  width: 100%;
-  height: 200px;
   object-fit: cover;
   border-radius: 5px;
 }
 
 .card-body {
+  flex: unset;
   text-align: center;
 }
 
@@ -102,5 +105,12 @@ async function deleteLikedItem(userId) {
 .like-img {
   width: 30px;
   height: 30px;
+}
+
+a {
+  display: block;
+  width: 300px;
+  text-decoration: none;
+  color: inherit;
 }
 </style>

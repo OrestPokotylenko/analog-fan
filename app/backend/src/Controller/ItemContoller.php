@@ -15,9 +15,9 @@ class ItemController {
         return $this->itemModel->getItems();
     }
 
-    public function postItem($title, $description, $price, $type, $images) {
+    public function postItem($userId, $title, $description, $price, $type, $images) {
         $cloudinaryService = new CloudinaryService();
         $imagesPath = $cloudinaryService->uploadImages($images);
-        return $this->itemModel->postItem($title, $description, $price, $type, $imagesPath);
+        return $this->itemModel->postItem($userId, $title, $description, $price, $type, $imagesPath);
     }
 }

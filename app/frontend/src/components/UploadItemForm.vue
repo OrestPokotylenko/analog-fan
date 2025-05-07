@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import axios from 'axios';
+import { useRouter } from 'vue-router';
 import TextInput from './reusable/TextInput.vue';
 
 const title = ref('');
@@ -10,7 +11,16 @@ const price = ref('');
 const type = ref('');
 const types = ['Cassette', 'Vinyl', 'Player'];
 
+const router = useRouter();
+
 async function handleSubmit() {
+    submitButton.disabled = true;
+
+    if (!validatePrice()) {
+    submitButton.disabled = false;
+    return;
+  }
+
   const formData = new FormData();
   formData.append('title', title.value);
   formData.append('description', description.value);
@@ -32,9 +42,18 @@ async function postItem(data) {
         }
     });
 
-    console.log(response);
+        if (response.status === 200) {
+            title.value = '';
+            images.value = null;
+            description.value = '';
+            price.value = '';
+            type.value = '';
+            submitButton.disabled = false;
+
+            router.push('/your-items');
+        }
     } catch (error) {
-        console.log(error);
+        alert('An error occurred while publishing the item. Please try again.');
     }
 }
 
@@ -51,6 +70,23 @@ function validateImages(event) {
   }
 
   images.value = [...(images.value || []), ...validFiles];
+}
+
+function validatePrice() {
+  const priceValue = price.value.trim();
+
+  if (!priceValue) {
+    alert('Price is required.');
+    return false;
+  }
+
+  const priceNumber = parseFloat(priceValue);
+  if (isNaN(priceNumber) || priceNumber <= 0) {
+    alert('Please enter a valid positive number for the price.');
+    return false;
+  }
+
+  return true;
 }
 </script>
 
@@ -73,7 +109,7 @@ function validateImages(event) {
             </div>
 
             <div class="form-group">
-                <TextInput v-model="price" label="Price (€)" placeholder="Enter item price" type="number" required />
+                <TextInput v-model="price" label="Price (€)" placeholder="Enter item price" type="text" required />
             </div>
 
             <div class="form-group">
@@ -84,7 +120,7 @@ function validateImages(event) {
                 </select>
             </div>
 
-            <button type="submit" class="btn btn-primary">Publish Item</button>
+            <button id="submitButton" type="submit" class="btn btn-primary">Publish Item</button>
         </form>
     </div>
 </template>

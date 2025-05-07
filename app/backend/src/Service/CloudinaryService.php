@@ -13,9 +13,9 @@ class CloudinaryService
     {
         $this->cloudinary = new Cloudinary([
             'cloud' => [
-                'cloud_name' => 'doxhlabtl',
-                'api_key' => '911999698828372',
-                'api_secret' => 'hNArUovrzXa-o4qxFksnmZOl43o'
+                'cloud_name' => $_ENV["CLOUDINARY_CLOUD_NAME"],
+                'api_key' => $_ENV["CLOUDINARY_API_KEY"],
+                'api_secret' => $_ENV["CLOUDINARY_API_SECRET"]
             ]
         ]);
     }
@@ -26,15 +26,14 @@ class CloudinaryService
 
         foreach ($images as $image) {
             try {
-                // Ensure the image is a valid file path
                 if (!file_exists($image)) {
                     throw new Exception("File does not exist: $image");
                 }
 
                 $response = $this->cloudinary->uploadApi()->upload($image, [
-                    'folder' => 'analog-fan' // Replace with your desired folder name
+                    'folder' => $_ENV["CLOUDINARY_FOLDER"]
                 ]);
-                $uploadedUrls[] = $response['secure_url']; // Get the secure URL of the uploaded image
+                $uploadedUrls[] = $response['secure_url'];
             } catch (Exception $e) {
                 throw new Exception('Failed to upload image: ' . $e->getMessage());
             }

@@ -21,14 +21,14 @@ class ItemModel extends BaseModel
         return $items;
     }
 
-    public function postItem(string $title, string $description, float $price, string $type, array $imagesPath): ItemDTO
+    public function postItem(int $userId, string $title, string $description, float $price, string $type, array $imagesPath): ItemDTO
     {
         try {
             $this->pdo->beginTransaction();
 
-            $query = 'INSERT INTO items (title, description, price, type, images) VALUES (:title, :description, :price, :type, :images)';
+            $query = 'INSERT INTO items (user_id, title, description, price, type, images) VALUES (:userId, :title, :description, :price, :type, :images)';
             $stmt = $this->pdo->prepare($query);
-            $success = $stmt->execute([':title' => $title, ':description' => $description, ':price' => $price, ':type' => $type, ':images' => json_encode($imagesPath)]);
+            $success = $stmt->execute([':userId' => $userId, ':title' => $title, ':description' => $description, ':price' => $price, ':type' => $type, ':images' => json_encode($imagesPath)]);
 
             if ($success) {
                 $lastInsertId = $this->pdo->lastInsertId();

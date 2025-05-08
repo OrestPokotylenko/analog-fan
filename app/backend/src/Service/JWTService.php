@@ -11,10 +11,9 @@ class JWTService {
 
     public function generateJWT($user) {
         $payload = [
-            'iss' => 'localhost',
             'iat' => time(),
             'exp' => time() + self::TOKEN_EXPARATION,
-            'sub' => $user->userId
+            'userId' => $user->userId
         ];
 
         return JWT::encode($payload, $_ENV['JWT_SECRET'], 'HS256');
@@ -23,9 +22,9 @@ class JWTService {
     public function validateJWT($token) {
         try {
             $decoded = JWT::decode($token, new Key($_ENV['JWT_SECRET'], 'HS256'));
-            return (array) $decoded;
+            return $decoded->userId;
         } catch (Exception $e) {
-            return false;
+            throw new Exception($e);
         }
     }
 }

@@ -1,3 +1,51 @@
+<script setup>
+import { inject, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import axios from 'axios';
+
+const router = useRouter();
+const $auth = inject('$auth', {
+  isLoggedIn: false,
+  user: null,
+  token: null
+});
+
+// Reactive state
+const username = ref('');
+const password = ref('');
+const errorMessage = ref('');
+
+// Methods
+async function handleLogin() {
+  try {
+    const response = await axios.get('http://localhost/api/authenticate', {
+      params: {
+        username: username.value,
+        password: password.value
+      }
+    });
+
+    if (response.data.success) {
+      // Update localStorage
+      localStorage.setItem('jwtToken', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+
+      // Update $auth global property
+      $auth.isLoggedIn = true;
+      $auth.token = response.data.token;
+      $auth.user = response.data.user;
+
+      // Redirect to home page
+      router.push('/');
+    } else {
+      errorMessage.value = response.data.message;
+    }
+  } catch (error) {
+    errorMessage.value = 'An error occurred during login. Please try again.';
+  }
+}
+</script>
+
 <template>
   <div class="row justify-content-center">
     <div class="card">
@@ -27,47 +75,6 @@
     </div>
   </div>
 </template>
-
-<script>
-import axios from 'axios';
-
-export default {
-  data() {
-    return {
-      username: '',
-      password: '',
-      errorMessage: ''
-    };
-  },
-  methods: {
-    async handleLogin() {
-      try {
-        const response = await axios.get('http://localhost/api/authenticate', {
-          params: {
-            username: this.username,
-            password: this.password
-          }
-        });
-
-        if (response.data.success) {
-          localStorage.setItem('jwtToken', response.data.token);
-          localStorage.setItem('user', JSON.stringify(response.data.user));
-
-          this.$root.$auth.isLoggedIn = true;
-          this.$root.$auth.token = response.data.token;
-          this.$root.$auth.user = response.data.user;
-
-          this.$router.push('/');
-        } else {
-          this.errorMessage = response.data.message;
-        }
-      } catch (error) {
-        this.errorMessage = 'An error occurred during login. Please try again.';
-      }
-    }
-  }
-};
-</script>
 
 <style scoped>
 .container {

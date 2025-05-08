@@ -35,10 +35,12 @@ async function handleSubmit() {
 }
 
 async function postItem(data) {
+    const token = localStorage.getItem('jwtToken');
     try {
         const response = await axios.post('http://localhost/api/items', data, {
         headers: {
-            'Content-Type': 'multipart/form-data'
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`
         }
     });
 

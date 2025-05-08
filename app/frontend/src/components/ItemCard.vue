@@ -66,7 +66,7 @@ async function deleteLikedItem(userId) {
       <div class="card-body">
         <p>{{ item.title }}</p>
         <div class="d-flex justify-content-between align-items-center">
-          <strong>€{{ item.price }}</strong>
+          <strong>€{{ item.price.toFixed(2) }}</strong>
           <button class="like-button" @click.stop.prevent="likeItem">
             <img :src="isLiked ? likeFilled : likeUnfilled" class="like-img" />
           </button>
@@ -100,6 +100,7 @@ async function deleteLikedItem(userId) {
 .like-button {
   background: white;
   padding: 0;
+  border: none;
 }
 
 .like-img {

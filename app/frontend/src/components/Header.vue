@@ -1,3 +1,39 @@
+<script setup>
+import { inject, ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+
+// Inject $auth from global properties
+const $auth = inject('$auth', {
+  isLoggedIn: false,
+  user: null,
+  token: null
+});
+
+// Computed properties for authentication state
+const isLoggedIn = computed(() => $auth.isLoggedIn);
+const user = computed(() => $auth.user);
+
+// Methods
+function search() {
+  console.log('Searching for:', searchQuery.value);
+}
+
+function login() {
+  router.push('/login');
+}
+
+function logout() {
+  localStorage.removeItem('jwtToken');
+  localStorage.removeItem('user');
+  $auth.isLoggedIn = false;
+  $auth.token = null;
+  $auth.user = null;
+  router.push('/');
+}
+</script>
+
 <template>
   <header class="navbar navbar-expand-lg navbar-light bg-light fixed-top w-100">
     <div class="container-fluid">
@@ -14,9 +50,15 @@
               Categories
             </RouterLink>
             <ul class="dropdown-menu" aria-labelledby="categoriesDropdown">
-              <li><RouterLink to="/category/cassettes" class="dropdown-item">Cassettes</RouterLink></li>
-              <li><RouterLink to="/category/vinyls" class="dropdown-item">Vinyl</RouterLink></li>
-              <li><RouterLink to="/category/players" class="dropdown-item">Players</RouterLink></li>
+              <li>
+                <RouterLink to="/category/cassettes" class="dropdown-item">Cassettes</RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/category/vinyls" class="dropdown-item">Vinyl</RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/category/players" class="dropdown-item">Players</RouterLink>
+              </li>
             </ul>
           </li>
         </ul>
@@ -39,41 +81,6 @@
     </div>
   </header>
 </template>
-
-<script>
-export default {
-  data() {
-    return {
-      searchQuery: ''
-    };
-  },
-  computed: {
-    isLoggedIn() {
-      return this.$auth.isLoggedIn;
-    },
-    user() {
-      return this.$auth.user;
-    }
-  },
-  methods: {
-    search() {
-      console.log('Searching for:', this.searchQuery);
-      // Implement your search logic here
-    },
-    login() {
-      this.$router.push('/login');
-    },
-    logout() {
-      localStorage.removeItem('jwtToken');
-      localStorage.removeItem('user');
-      this.$auth.isLoggedIn = false;
-      this.$auth.token = null;
-      this.$auth.user = null;
-      this.$router.push('/');
-    }
-  }
-};
-</script>
 
 <style scoped>
 header {

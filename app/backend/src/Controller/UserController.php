@@ -62,4 +62,21 @@ class UserController {
 
         return null;
     }
+
+    public function getAuthenticatedUser() {
+        $headers = getallheaders();
+
+        if (!isset($headers['Authorization'])) {
+            throw new Exception('Authorization header not found.', 401);
+        }
+
+        $token = str_replace('Bearer ', '', $headers['Authorization']);
+        
+        try {
+            $userId = $this->jwtService->validateJWT($token);
+            return $userId;
+        } catch (Exception $e) {
+            throw new Exception('Invalid token.', 401);
+        }
+    }
 }

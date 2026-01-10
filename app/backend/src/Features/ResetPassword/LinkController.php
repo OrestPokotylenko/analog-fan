@@ -1,6 +1,6 @@
 <?php
 
-require_once(__DIR__ . '/../Model/LinkModel.php');
+namespace App\Features\ResetPassword;
 
 class LinkController {
     private $linkModel;

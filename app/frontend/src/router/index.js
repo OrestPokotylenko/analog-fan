@@ -9,8 +9,9 @@ const routes = [
   { path: '/category/cassettes', component: () => import('../views/Cassettes.vue') },
   { path: '/category/vinyls', component: () => import('../views/Vinyls.vue') },
   { path: '/category/players', component: () => import('../views/Players.vue') },
-  { path: '/your-items', component: () => import('../views/SellingItems.vue') },
-  { path: '/your-items/upload', component: () => import('../views/UploadItem.vue') }
+  { path: '/my-items', component: () => import('../views/SellingItems.vue') },
+  { path: '/my-items/upload', component: () => import('../views/UploadItem.vue') },
+  { path: '/my-items/:id', component: () => import('../views/EditItem.vue') }
 ];
 
 const router = createRouter({

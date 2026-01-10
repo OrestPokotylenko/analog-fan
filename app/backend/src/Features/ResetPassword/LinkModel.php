@@ -1,6 +1,8 @@
 <?php
 
-require_once(__DIR__ . '/../DTO/LinkDTO.php');
+namespace App\Features\ResetPassword;
+
+use App\Core\BaseModel;
 
 class LinkModel extends BaseModel {
     public function addLink($linkDto) {

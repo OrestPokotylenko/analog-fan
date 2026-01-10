@@ -1,8 +1,9 @@
 <?php
 
-require_once(__DIR__ . '/../DTO/UserDTO.php');
-require_once(__DIR__ . '/../Model/UserModel.php');
-require_once(__DIR__ . '/../Service/JWTService.php');
+namespace App\Features\User;
+
+use App\External\JWTService;
+use Exception;
 
 class UserController {
     private UserModel $userModel;

@@ -1,6 +1,8 @@
 <?php
 
-require_once(__DIR__ . '/../Enum/ItemType.php');
+namespace App\Features\Item;
+
+use DateTime;
 
 class ItemDTO {
     public readonly int $itemId;

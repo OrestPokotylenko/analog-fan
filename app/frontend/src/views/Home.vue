@@ -24,7 +24,6 @@ async function fetchItems() {
 async function fetchLikedItems() {
   const user = JSON.parse(localStorage.getItem('user'));
   if (!user || !user.userId) {
-    console.error('User not found in localStorage or userId is missing');
     return;
   }
 

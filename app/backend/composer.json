@@ -1,7 +1,17 @@
 {
+    "name": "analog-fan/backend",
+    "description": "Analog Fan - Backend API for buying and selling analog items",
+    "type": "project",
+    "license": "proprietary",
     "require": {
-        "phpmailer/phpmailer": "^6.9",
-        "firebase/php-jwt": "^6.11",
-        "cloudinary/cloudinary_php": "^3.1"
+        "php": "^8.2",
+        "cloudinary/cloudinary_php": "^3.1",
+        "firebase/php-jwt": "^6.0",
+        "phpmailer/phpmailer": "^6.9"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
     }
 }

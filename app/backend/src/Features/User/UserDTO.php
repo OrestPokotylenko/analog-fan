@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Features\User;
+
 class UserDTO {
     public readonly ?int $userId;
     public readonly string $firstName;

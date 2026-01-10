@@ -1,6 +1,10 @@
 <?php
 
-require_once(__DIR__ . '/../../config/env.php');
+namespace App\Core;
+
+use PDO;
+use PDOException;
+use Exception;
 
 class BaseModel {
     protected $pdo;

@@ -1,10 +1,10 @@
 <?php 
 
-require_once(__DIR__ . '/../../vendor/autoload.php');
-require_once(__DIR__ . '/../../config/env.php');
+namespace App\External;
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
+use Exception;
 
 class JWTService {
     private const TOKEN_EXPARATION = 3600;

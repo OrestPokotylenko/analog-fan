@@ -1,9 +1,9 @@
 <?php
 
-require_once(__DIR__ . '/Mailer.php');
-require_once(__DIR__ . '/../Model/UserModel.php');
-require_once(__DIR__ . '/../Model/LinkModel.php');
-require_once(__DIR__ . '/../DTO/LinkDTO.php');
+namespace App\Features\ResetPassword;
+
+use App\External\Mailer;
+use App\Features\User\UserModel;
 
 class PasswordResetService {
     private $mailer;

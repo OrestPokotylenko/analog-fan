@@ -1,7 +1,10 @@
 <?php
 
-require_once(__DIR__ . '/BaseModel.php');
-require_once(__DIR__ . '/../DTO/LikedItemDTO.php');
+namespace App\Features\Item;
+
+use App\Core\BaseModel;
+use PDO;
+use PDOException;
 
 class LikedItemModel extends BaseModel {
     public function fetchLikedItems($userId): array {

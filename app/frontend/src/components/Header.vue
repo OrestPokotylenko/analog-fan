@@ -67,7 +67,7 @@ function logout() {
             v-model="searchQuery" />
           <button class="btn btn-outline-success nav-button" type="submit">Search</button>
         </form>
-        <RouterLink to="/your-items" class="btn btn-outline-primary nav-button">Sell</RouterLink>
+        <RouterLink to="/my-items" class="btn btn-outline-primary nav-button">Sell</RouterLink>
         <RouterLink to="/cart" class="btn btn-outline-secondary ms-auto nav-button">Cart</RouterLink>
         <RouterLink to="/watchlist" class="btn btn-outline-secondary ms-5 nav-button">Watchlist</RouterLink>
         <div class="ms-5">

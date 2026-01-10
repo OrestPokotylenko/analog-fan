@@ -1,6 +1,7 @@
 <?php
 
-require_once(__DIR__ . '/../src/Controller/LikedItemController.php');
+use App\Features\Item\LikedItemController;
+use App\Core\Route;
 
 $likedItemController = new LikedItemController();
 

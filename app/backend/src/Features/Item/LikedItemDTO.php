@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Features\Item;
+
 class LikedItemDTO {
     public readonly int $userId;
     public readonly int $itemId;

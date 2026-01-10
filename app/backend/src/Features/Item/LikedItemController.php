@@ -1,6 +1,6 @@
 <?php
 
-require_once(__DIR__ . '/../Model/LikedItemModel.php');
+namespace App\Features\Item;
 
 class LikedItemController {
     private $model;

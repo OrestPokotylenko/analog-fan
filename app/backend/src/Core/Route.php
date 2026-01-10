@@ -2,6 +2,8 @@
 
 // From: https://github.com/steampixel/simplePHPRouter
 
+namespace App\Core;
+
 class Route
 {
 

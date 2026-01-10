@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Features\ResetPassword;
+
 class LinkDTO {
     public readonly ?int $linkId;
     public readonly int $userId;

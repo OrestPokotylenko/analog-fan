@@ -1,7 +1,9 @@
 <?php
 
-require_once(__DIR__ . '/BaseModel.php');
-require_once(__DIR__ . '/../DTO/UserDTO.php');
+namespace App\Features\User;
+
+use App\Core\BaseModel;
+use PDOException;
 
 class UserModel extends BaseModel {
     public function userExists($username, $email) {

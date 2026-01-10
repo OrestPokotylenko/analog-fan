@@ -1,9 +1,10 @@
 <?php
 
-require_once(__DIR__ . '/../src/Controller/UserController.php');
-require_once(__DIR__ . '/../src/Service/JWTService.php');
-require_once(__DIR__ . '/../src/Service/PasswordResetService.php');
-require_once(__DIR__ . '/../src/Controller/LinkController.php');
+use App\Features\User\UserController;
+use App\Features\ResetPassword\LinkController;
+use App\External\JWTService;
+use App\Features\ResetPassword\PasswordResetService;
+use App\Core\Route;
 
 $userController = new UserController();
 $jwtService = new JWTService();

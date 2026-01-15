@@ -26,7 +26,7 @@
 </template>
 
 <script>
-import axios from 'axios';
+import axios from '../services/axiosConfig';
 
 export default {
   data() {
@@ -41,7 +41,7 @@ export default {
       resetButon.disabled = true;
 
       try {
-        const response = await axios.get('http://localhost/api/reset-password', {
+        const response = await axios.get('/reset-password', {
           params: {
             email: this.email
           }

@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-import axios from 'axios';
+import axios from '../services/axiosConfig';
 import { useRouter } from 'vue-router';
 import TextInput from './reusable/TextInput.vue';
 
@@ -35,12 +35,10 @@ async function handleSubmit() {
 }
 
 async function postItem(data) {
-    const token = localStorage.getItem('jwtToken');
     try {
-        const response = await axios.post('http://localhost/api/items', data, {
+        const response = await axios.post('/items', data, {
         headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${token}`
+            'Content-Type': 'multipart/form-data'
         }
     });
 

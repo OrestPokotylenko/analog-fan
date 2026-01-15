@@ -8,7 +8,7 @@
 </template>
 
 <script>
-import axios from 'axios';
+import axios from '../services/axiosConfig';
 
 export default {
   data() {
@@ -22,7 +22,7 @@ export default {
   methods: {
     async fetchUsers() {
       try {
-        const response = await axios.get('http://localhost/api/users');
+        const response = await axios.get('/users');
         this.users = response.data;
         console.log(this.users);
       } catch (error) {

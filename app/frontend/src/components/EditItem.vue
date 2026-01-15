@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import axios from 'axios';
+import axios from '../services/axiosConfig';
 import TrashBinIcon from '../assets/trash-bin-icon.svg';
 
 const route = useRoute();
@@ -18,12 +18,7 @@ onMounted(async () => {
 
 async function fetchItem() {
   try {
-    const token = localStorage.getItem('jwtToken');
-    const response = await axios.get(`http://localhost/api/items/${route.params.id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
+    const response = await axios.get(`/items/${route.params.id}`);
     item.value = response.data;
   } catch (error) {
     console.error('Fetch error:', error);
@@ -38,8 +33,6 @@ function handleImageUpload(event) {
 
 async function updateItem() {
   try {
-    const token = localStorage.getItem('jwtToken');
-
     const formData = new FormData();
     formData.append('title', String(item.value.title ?? ''));
     formData.append('description', String(item.value.description ?? ''));
@@ -59,13 +52,8 @@ async function updateItem() {
     }
 
     const response = await axios.put(
-      `http://localhost/api/items/${route.params.id}`,
-      formData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
+      `/items/${route.params.id}`,
+      formData
     );
 
     if (response.data.success) {
@@ -82,14 +70,8 @@ async function updateItem() {
 async function deleteImage(index) {
   if (confirm('Are you sure you want to delete this image?')) {
     try {
-      const token = localStorage.getItem('jwtToken');
       await axios.delete(
-        `http://localhost/api/items/${route.params.id}/images/${index}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
+        `/items/${route.params.id}/images/${index}`
       );
       item.value.imagesPath.splice(index, 1);
     } catch (error) {
@@ -102,10 +84,7 @@ async function deleteImage(index) {
 async function deleteItem() {
   if (!confirm('Delete this item? This cannot be undone.')) return;
   try {
-    const token = localStorage.getItem('jwtToken');
-    const resp = await axios.delete(`http://localhost/api/items/${route.params.id}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const resp = await axios.delete(`/items/${route.params.id}`);
     if (resp.data?.success !== false) {
       router.push('/my-items');
     } else {

@@ -11,7 +11,7 @@
   </template>
   
   <script>
-  import axios from 'axios';
+  import axios from '../services/axiosConfig';
   import Header from '../components/Header.vue';
   import ResetPasswordForm from '../components/ResetPasswordForm.vue';
   import CreateNewPasswordForm from '../components/CreateNewPasswordForm.vue';
@@ -32,7 +32,7 @@
     async created() {
       if (this.hasToken) {
         try {
-          const response = await axios.get('http://localhost/api/validate-token', {
+          const response = await axios.get('/validate-token', {
             params: { token: this.$route.query.token }
           });
   

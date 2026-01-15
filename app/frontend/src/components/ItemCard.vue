@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import likeFilled from '../assets/like-filled.svg';
 import likeUnfilled from '../assets/like-unfilled.svg';
-import axios from 'axios';
+import axios from '../services/axiosConfig';
 
 const props = defineProps({
   item: {
@@ -36,7 +36,7 @@ async function likeItem() {
 
 async function createLikedItem(userId) {
   try {
-    await axios.post('http://localhost/api/liked-items', {
+    await axios.post('/liked-items', {
       itemId: props.item.itemId,
       userId: userId
     });
@@ -47,7 +47,7 @@ async function createLikedItem(userId) {
 
 async function deleteLikedItem(userId) {
   try {
-    await axios.delete('http://localhost/api/liked-items', {
+    await axios.delete('/liked-items', {
       data: {
         itemId: props.item.itemId,
         userId: userId

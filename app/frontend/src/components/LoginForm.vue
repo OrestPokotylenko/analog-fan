@@ -1,7 +1,7 @@
 <script setup>
 import { inject, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
+import axios from '../services/axiosConfig';
 
 const router = useRouter();
 const $auth = inject('$auth', {
@@ -18,7 +18,7 @@ const errorMessage = ref('');
 // Methods
 async function handleLogin() {
   try {
-    const response = await axios.get('http://localhost/api/authenticate', {
+    const response = await axios.get('/authenticate', {
       params: {
         username: username.value,
         password: password.value

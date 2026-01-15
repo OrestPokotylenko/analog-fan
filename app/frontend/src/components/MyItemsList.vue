@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
+import axios from '../services/axiosConfig';
 import MyItemCard from '../components/MyItemCard.vue';
 
 const items = ref([]);
@@ -10,13 +10,8 @@ onMounted(async () => {
 });
 
 async function fetchItems() {
-    const token = localStorage.getItem('jwtToken');
     try {
-        const response = await axios.get('http://localhost/api/items/my-items', {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
+        const response = await axios.get('/items/my-items');
         items.value = response.data;
     } catch (error) {
         console.error('Failed to fetch items:', error);

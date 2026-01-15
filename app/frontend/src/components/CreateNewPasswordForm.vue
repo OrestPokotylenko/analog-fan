@@ -28,7 +28,7 @@
 </template>
 
 <script>
-import axios from 'axios';
+import axios from '../services/axiosConfig';
 
 export default {
   data() {
@@ -53,7 +53,7 @@ export default {
       this.isSubmitting = true;
 
       try {
-        const response = await axios.put('http://localhost/api/reset-password', {
+        const response = await axios.put('/reset-password', {
           token: this.token,
           password: this.password
         });

@@ -46,7 +46,7 @@
 </template>
 
 <script>
-import axios from 'axios';
+import axios from '../services/axiosConfig';
 
 export default {
   data() {
@@ -81,7 +81,7 @@ export default {
       }
     },
     async registerUser() {
-      return axios.post('http://localhost/api/users', {
+      return axios.post('/users', {
         firstName: this.firstName,
         lastName: this.lastName,
         username: this.username,
@@ -91,7 +91,7 @@ export default {
       });
     },
     async authenticateUser() {
-      const response = await axios.get('http://localhost/api/authenticate', {
+      const response = await axios.get('/authenticate', {
         params: {
           username: this.username,
           password: this.password

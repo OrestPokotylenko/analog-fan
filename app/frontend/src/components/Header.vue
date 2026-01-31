@@ -1,6 +1,7 @@
 <script setup>
-import { inject, ref, computed } from 'vue';
+import { inject, ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import axios from '../services/axiosConfig';
 
 const router = useRouter();
 
@@ -14,6 +15,22 @@ const $auth = inject('$auth', {
 // Computed properties for authentication state
 const isLoggedIn = computed(() => $auth.isLoggedIn);
 const user = computed(() => $auth.user);
+
+const productTypes = ref([]);
+const isLoadingTypes = ref(false);
+
+async function fetchProductTypes() {
+  try {
+    isLoadingTypes.value = true;
+    const response = await axios.get('/product-types');
+    productTypes.value = Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error('Failed to load product types', error);
+    productTypes.value = [];
+  } finally {
+    isLoadingTypes.value = false;
+  }
+}
 
 // Methods
 function search() {
@@ -32,6 +49,8 @@ function logout() {
   $auth.user = null;
   router.push('/');
 }
+
+onMounted(fetchProductTypes);
 </script>
 
 <template>
@@ -45,19 +64,24 @@ function logout() {
       <div class="collapse navbar-collapse d-flex" id="navbarNav">
         <ul class="navbar-nav ms-auto">
           <li class="nav-item dropdown">
-            <RouterLink to="/category" class="nav-link dropdown-toggle" id="categoriesDropdown" role="button"
+            <RouterLink to="/categories" class="nav-link dropdown-toggle" id="categoriesDropdown" role="button"
               aria-expanded="false">
               Categories
             </RouterLink>
             <ul class="dropdown-menu" aria-labelledby="categoriesDropdown">
-              <li>
-                <RouterLink to="/category/cassettes" class="dropdown-item">Cassettes</RouterLink>
+              <li v-if="isLoadingTypes">
+                <span class="dropdown-item text-muted">Loading...</span>
               </li>
-              <li>
-                <RouterLink to="/category/vinyls" class="dropdown-item">Vinyl</RouterLink>
+              <li v-else-if="!productTypes.length">
+                <span class="dropdown-item text-muted">No types found</span>
               </li>
-              <li>
-                <RouterLink to="/category/players" class="dropdown-item">Players</RouterLink>
+              <li v-else v-for="type in productTypes" :key="type.productTypeId">
+                <RouterLink
+                  :to="`/category/${type.name.toLowerCase()}`"
+                  class="dropdown-item"
+                >
+                  {{ type.name }}
+                </RouterLink>
               </li>
             </ul>
           </li>

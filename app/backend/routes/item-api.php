@@ -75,6 +75,15 @@ function parsePutFormData() {
     }
 }
 
+Route::add('/api/items/type/([0-9]+)', function ($typeId) use ($itemController) {
+    try {
+        echo json_encode($itemController->getItemsByType((int)$typeId));
+    } catch (\Throwable $e) {
+        http_response_code(http_status_from_exception($e));
+        echo json_encode(['error' => $e->getMessage()]);
+    }
+});
+
 Route::add('/api/items', function () use ($itemController) {
     try {
         echo json_encode($itemController->getItems());

@@ -64,6 +64,13 @@ class ItemModel extends BaseModel {
         return ['success' => true, 'message' => 'Item deleted'];
     }
 
+    public function getItemsByType($type) {
+        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE product_type_id = ?");
+        $stmt->execute([$type]);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        return array_map([$this, 'normalizeRow'], $rows);
+    }
+
     private function normalizeRow(array $row): array {
         return [
             'itemId'      => (int)($row['item_id'] ?? 0),

@@ -60,16 +60,29 @@ async function deleteLikedItem(userId) {
 </script>
 
 <template>
-  <RouterLink :to="`/item/${item.itemId}`">
-    <div class="card d-flex flex-column justify-content-between">
-      <img :src="item.imagesPath[0]" class="item-image" :alt="item.title" />
+  <RouterLink :to="`/item/${item.itemId}`" class="card-link">
+    <div class="card">
+      <div class="card-image-container">
+      <img
+        v-if="item.imagesPath?.[0]"
+        :src="item.imagesPath[0]"
+        class="card-image"
+        :alt="item.title"
+      />
+      <div v-else class="card-image-placeholder">No Image</div>
+      <button class="like-btn" @click.stop="likeItem">
+        <img :src="isLiked ? likeFilled : likeUnfilled" class="like-icon" />
+      </button>
+      </div>
+
       <div class="card-body">
-        <p>{{ item.title }}</p>
-        <div class="d-flex justify-content-between align-items-center">
-          <strong>€{{ item.price.toFixed(2) }}</strong>
-          <button class="like-button" @click.stop.prevent="likeItem">
-            <img :src="isLiked ? likeFilled : likeUnfilled" class="like-img" />
-          </button>
+        <h3 class="card-title">{{ item.title }}</h3>
+        
+        <p class="card-type">{{ item.type }}</p>
+        <p class="card-description">{{ item.description }}</p>
+        
+        <div class="card-footer">
+          <span class="card-price">€{{ item.price.toFixed(2) }}</span>
         </div>
       </div>
     </div>
@@ -77,41 +90,170 @@ async function deleteLikedItem(userId) {
 </template>
 
 <style scoped>
+.card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  height: 100%;
+}
+
 .card {
-  width: 300px;
-  height: 410px;
-  margin: 10px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid rgba(233, 69, 96, 0.1);
+}
+
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 30px rgba(233, 69, 96, 0.2);
+  border-color: rgba(233, 69, 96, 0.3);
+}
+
+.card-image-container {
+  position: relative;
+  width: 100%;
+  height: 280px;
+  background: #0f0f1e;
+  overflow: hidden;
   cursor: pointer;
 }
 
-.item-image {
+.card-image {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  border-radius: 5px;
+}
+
+.card-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(233, 69, 96, 0.1) 0%, rgba(233, 69, 96, 0.05) 100%);
+  color: #666;
+  font-weight: 500;
+  font-size: 0.9em;
+}
+
+
+.like-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(233, 69, 96, 0.9);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  backdrop-filter: blur(4px);
+  z-index: 10;
+}
+
+.like-btn:hover {
+  background: #e94560;
+  transform: scale(1.1);
+}
+
+.like-icon {
+  width: 20px;
+  height: 20px;
+  filter: brightness(0) invert(1);
 }
 
 .card-body {
-  flex: unset;
-  text-align: center;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 12px;
 }
 
-.like-button {
-  background: white;
-  padding: 0;
-  border: none;
+.card-title {
+  font-size: 1.2em;
+  font-weight: 700;
+  color: #e0e0e0;
+  margin: 0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.like-img {
-  width: 30px;
-  height: 30px;
+.card-type {
+  font-size: 0.8em;
+  color: #e94560;
+  font-weight: 700;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-a {
-  display: block;
-  width: 300px;
-  text-decoration: none;
-  color: inherit;
+.card-description {
+  font-size: 0.9em;
+  color: #c0c0c0;
+  margin: 0;
+  flex: 1;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid rgba(233, 69, 96, 0.1);
+  gap: 12px;
+}
+
+.card-price {
+  font-size: 1.5em;
+  font-weight: 700;
+  color: #e94560;
+}
+
+
+@media (max-width: 768px) {
+  .card {
+    border-radius: 10px;
+  }
+
+  .card-image-container {
+    height: 220px;
+  }
+
+  .card-title {
+    font-size: 1.05em;
+  }
+
+  .card-description {
+    font-size: 0.85em;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+
+  .card-price {
+    font-size: 1.3em;
+  }
+
 }
 </style>

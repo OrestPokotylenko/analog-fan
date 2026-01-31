@@ -79,79 +79,154 @@ async function fetchLikedItems() {
 
 <template>
   <Header />
-  <div class="content">
-    <div class="category-header">
-      <h1 class="category-title">{{ categoryType || 'Category' }}</h1>
+  <div class="category-page">
+    <div class="hero-section">
+      <div class="hero-content">
+        <h1 class="hero-title">{{ categoryType || 'Category' }}</h1>
+        <p class="hero-subtitle">Explore our collection</p>
+      </div>
     </div>
 
-    <div v-if="isLoading" class="text-center">
-      <p class="loading-text">Loading items...</p>
-    </div>
+    <div class="container">
+      <div v-if="isLoading" class="loading-state">
+        <p>Loading items...</p>
+      </div>
 
-    <div v-else-if="errorMessage" class="text-center">
-      <p class="error-text">{{ errorMessage }}</p>
-    </div>
+      <div v-else-if="errorMessage" class="error-state">
+        <p>{{ errorMessage }}</p>
+      </div>
 
-    <div v-else-if="!items.length" class="text-center">
-      <p class="no-items-text">No items found in this category</p>
-    </div>
+      <div v-else-if="!items.length" class="empty-state">
+        <p>No items found in this category</p>
+      </div>
 
-    <div v-else class="cards-container">
-      <div v-for="item in items" :key="item.itemId" class="card-wrapper">
-        <ItemCard :item="item" :likedItems="likedItems" />
+      <div v-else class="items-grid">
+        <ItemCard 
+          v-for="item in items" 
+          :key="item.itemId" 
+          :item="item"
+          :likedItems="likedItems"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.content {
-  padding: 100px 50px 50px;
+.category-page {
+  padding-top: 70px;
+  background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
   min-height: 100vh;
+  padding-bottom: 60px;
 }
 
-.category-header {
-  margin-bottom: 40px;
+.hero-section {
+  background: linear-gradient(135deg, #e94560 0%, #ff6b7a 100%);
+  padding: 80px 30px;
   text-align: center;
+  color: white;
+  margin-bottom: 60px;
 }
 
-.category-title {
-  font-size: 2.5em;
-  color: rgba(255, 255, 255, 0.87);
+.hero-content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.hero-title {
+  font-size: 3em;
+  font-weight: 800;
+  margin: 0 0 15px 0;
+  letter-spacing: -1px;
+  line-height: 1.1;
   text-transform: capitalize;
 }
 
-.loading-text,
-.error-text,
-.no-items-text {
+.hero-subtitle {
   font-size: 1.2em;
-  color: rgba(255, 255, 255, 0.7);
-  margin-top: 50px;
+  margin: 0;
+  opacity: 0.95;
 }
 
-.error-text {
-  color: #ff6b6b;
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 30px;
 }
 
-.cards-container {
+.loading-state,
+.error-state,
+.empty-state {
+  text-align: center;
+  padding: 80px 30px;
+  font-size: 1.1em;
+}
+
+.loading-state,
+.empty-state {
+  color: #b0b0b0;
+}
+
+.error-state {
+  color: #ff6b7a;
+}
+
+.items-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 30px;
+  animation: fadeIn 0.3s;
 }
 
-.card-wrapper {
-  width: 100%;
-  height: auto;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-@media (prefers-color-scheme: light) {
-  .category-title {
-    color: #213547;
+@media (max-width: 1024px) {
+  .items-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 25px;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-section {
+    padding: 60px 20px;
+    margin-bottom: 40px;
   }
 
-  .loading-text,
-  .no-items-text {
-    color: #666;
+  .hero-title {
+    font-size: 2.2em;
+  }
+
+  .hero-subtitle {
+    font-size: 1em;
+  }
+
+  .container {
+    padding: 0 20px;
+  }
+
+  .items-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-title {
+    font-size: 1.8em;
+  }
+
+  .items-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

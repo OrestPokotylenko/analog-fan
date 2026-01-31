@@ -2,6 +2,7 @@
 
 namespace App\Features\Item;
 
+use App\Features\ProductType\ProductTypeDto;
 use DateTime;
 
 class ItemDTO {
@@ -10,17 +11,17 @@ class ItemDTO {
     public readonly string $title;
     public readonly string $description;
     public readonly float $price;
-    public readonly ItemType $type;
+    public readonly int $productTypeId;
     public readonly DateTime $creationDate;
     public readonly array $imagesPath;
     
-    public function __construct(int $itemId, int $userId, string $title, string $description, float $price, ItemType $type, DateTime $creationDate, array $imagesPath) {
+    public function __construct(int $itemId, int $userId, string $title, string $description, float $price, int $productTypeId, DateTime $creationDate, array $imagesPath) {
         $this->itemId = $itemId;
         $this->userId = $userId;
         $this->title = $title;
         $this->description = $description;
         $this->price = $price;
-        $this->type = $type;
+        $this->productTypeId = $productTypeId;
         $this->creationDate = $creationDate;
         $this->imagesPath = $imagesPath;
     }
@@ -32,7 +33,7 @@ class ItemDTO {
             $itemData['title'],
             $itemData['description'],
             (float)$itemData['price'],
-            ItemType::from($itemData['type']),
+            (int)$itemData['product_type_id'],
             new DateTime($itemData['creation_date']),
             json_decode($itemData['images'], true)
         );

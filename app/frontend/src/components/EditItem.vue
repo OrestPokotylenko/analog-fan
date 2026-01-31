@@ -9,11 +9,11 @@ const router = useRouter();
 const item = ref(null);
 const errorMessage = ref('');
 const newImages = ref([]);
-
-const itemTypes = ['Cassette', 'Vinyl', 'Player'];
+const productTypes = ref([]);
+const isLoadingTypes = ref(false);
 
 onMounted(async () => {
-  await fetchItem();
+  await Promise.all([fetchItem(), fetchProductTypes()]);
 });
 
 async function fetchItem() {
@@ -23,6 +23,19 @@ async function fetchItem() {
   } catch (error) {
     console.error('Fetch error:', error);
     errorMessage.value = 'Failed to load item.';
+  }
+}
+
+async function fetchProductTypes() {
+  try {
+    isLoadingTypes.value = true;
+    const response = await axios.get('/product-types');
+    productTypes.value = Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error('Failed to load product types', error);
+    productTypes.value = [];
+  } finally {
+    isLoadingTypes.value = false;
   }
 }
 
@@ -37,7 +50,7 @@ async function updateItem() {
     formData.append('title', String(item.value.title ?? ''));
     formData.append('description', String(item.value.description ?? ''));
     formData.append('price', String(item.value.price ?? 0));
-    formData.append('type', String(item.value.type ?? ''));
+    formData.append('type', String(item.value.productTypeId ?? ''));
 
     if (item.value.imagesPath && item.value.imagesPath.length > 0) {
       item.value.imagesPath.forEach((img) => {
@@ -152,10 +165,10 @@ async function deleteItem() {
 
       <div class="mb-3">
         <label class="form-label">Type</label>
-        <select v-model="item.type" class="form-select" required>
+        <select v-model="item.productTypeId" class="form-select" :disabled="isLoadingTypes" required>
           <option value="" disabled>Select item type</option>
-          <option v-for="type in itemTypes" :key="type" :value="type">
-            {{ type }}
+          <option v-for="type in productTypes" :key="type.productTypeId" :value="type.productTypeId">
+            {{ type.name }}
           </option>
         </select>
       </div>

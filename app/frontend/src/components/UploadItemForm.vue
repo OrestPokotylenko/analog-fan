@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import axios from '../services/axiosConfig';
 import { useRouter } from 'vue-router';
 import TextInput from './reusable/TextInput.vue';
@@ -9,9 +9,25 @@ const images = ref();
 const description = ref('');
 const price = ref('');
 const type = ref('');
-const types = ['Cassette', 'Vinyl', 'Player'];
+const productTypes = ref([]);
+const isLoadingTypes = ref(false);
 
 const router = useRouter();
+
+async function fetchProductTypes() {
+    try {
+        isLoadingTypes.value = true;
+        const response = await axios.get('/product-types');
+        productTypes.value = Array.isArray(response.data) ? response.data : [];
+    } catch (error) {
+        console.error('Failed to load product types', error);
+        productTypes.value = [];
+    } finally {
+        isLoadingTypes.value = false;
+    }
+}
+
+onMounted(fetchProductTypes);
 
 async function handleSubmit() {
     submitButton.disabled = true;
@@ -114,9 +130,9 @@ function validatePrice() {
 
             <div class="form-group">
                 <label for="type">Type</label>
-                <select id="type" v-model="type" class="form-control" required>
+                <select id="type" v-model="type" class="form-control" :disabled="isLoadingTypes" required>
                     <option value="" disabled>Select item type</option>
-                    <option v-for="t in types" :key="t" :value="t">{{ t }}</option>
+                    <option v-for="t in productTypes" :key="t.productTypeId" :value="t.productTypeId">{{ t.name }}</option>
                 </select>
             </div>
 

@@ -18,6 +18,10 @@ class ItemController {
         return $this->itemModel->getItems();
     }
 
+    public function getItemsByType($type) {
+        return $this->itemModel->getItemsByType($type);
+    }
+
     public function fetchItemById($id) {
         return $this->itemModel->fetchItemById($id);
     }

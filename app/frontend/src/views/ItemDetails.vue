@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from '../services/axiosConfig';
+import CartService from '../services/CartService';
 import Header from '../components/Header.vue';
 
 const route = useRoute();
@@ -13,6 +14,9 @@ const errorMessage = ref('');
 const isLiked = ref(false);
 const cartItems = ref([]);
 const selectedImageIndex = ref(0);
+const showNotification = ref(false);
+const notificationMessage = ref('');
+const addedToCart = ref(false);
 
 onMounted(async () => {
   await fetchItem();
@@ -62,9 +66,14 @@ async function fetchLikedItems() {
 }
 
 async function fetchCart() {
+  const user = JSON.parse(localStorage.getItem('user'));
+  if (!user || !user.userId) {
+    cartItems.value = [];
+    return;
+  }
+
   try {
-    const cartData = localStorage.getItem('cart');
-    cartItems.value = cartData ? JSON.parse(cartData) : [];
+    cartItems.value = await CartService.getCartItems(user.userId);
   } catch (error) {
     console.error('Failed to fetch cart:', error);
     cartItems.value = [];
@@ -98,7 +107,15 @@ async function toggleLike() {
   }
 }
 
-function addToCart() {
+function showToast(message, duration = 3000) {
+  notificationMessage.value = message;
+  showNotification.value = true;
+  setTimeout(() => {
+    showNotification.value = false;
+  }, duration);
+}
+
+async function addToCart() {
   const user = JSON.parse(localStorage.getItem('user'));
   if (!user || !user.userId) {
     router.push('/login');
@@ -106,26 +123,46 @@ function addToCart() {
   }
 
   if (item.value.userId === user.userId) {
-    alert('You cannot add your own items to cart');
+    showToast('You cannot add your own items to cart');
     return;
   }
-
-  const cartItem = {
-    itemId: item.value.itemId,
-    title: item.value.title,
-    price: item.value.price,
-    image: item.value.imagesPath?.[0]
-  };
 
   const existingItem = cartItems.value.find(ci => ci.itemId === item.value.itemId);
   if (existingItem) {
-    alert('Item already in cart');
+    showToast('Item already in cart');
     return;
   }
 
-  cartItems.value.push(cartItem);
-  localStorage.setItem('cart', JSON.stringify(cartItems.value));
-  alert('Added to cart!');
+  // Optimistic update - show immediately
+  addedToCart.value = true;
+  showToast('✓ Added to cart!');
+  
+  // Add to local cart items immediately (optimistic)
+  cartItems.value.push({
+    itemId: item.value.itemId,
+    title: item.value.title,
+    price: item.value.price,
+    quantity: 1,
+    images: item.value.images
+  });
+  
+  // Add to backend in background
+  CartService.addItem(
+    user.userId,
+    item.value.itemId,
+    1
+  ).then((success) => {
+    if (!success) {
+      showToast('Failed to sync with server');
+      addedToCart.value = false;
+      // Remove from local cart if backend failed
+      cartItems.value = cartItems.value.filter(ci => ci.itemId !== item.value.itemId);
+    }
+  });
+  
+  setTimeout(() => {
+    addedToCart.value = false;
+  }, 2000);
 }
 
 function buyNow() {
@@ -179,6 +216,13 @@ onUnmounted(() => {
 <template>
   <Header />
   <div class="details-page">
+    <!-- Toast Notification -->
+    <transition name="toast">
+      <div v-if="showNotification" class="toast-notification">
+        {{ notificationMessage }}
+      </div>
+    </transition>
+    
     <div v-if="isLoading" class="loading-state">
       <p>Loading item...</p>
     </div>
@@ -265,8 +309,12 @@ onUnmounted(() => {
             <p class="price">€{{ item.price.toFixed(2) }}</p>
           </div>
           <div class="actions-section">
-            <button class="btn btn-primary" @click="addToCart">
-              Add to Cart
+            <button 
+              class="btn btn-primary" 
+              :class="{ 'btn-added': addedToCart }"
+              @click="addToCart"
+            >
+              {{ addedToCart ? '✓ Added!' : 'Add to Cart' }}
             </button>
             <button class="btn btn-accent" @click="buyNow">
               Buy Now
@@ -698,4 +746,79 @@ onUnmounted(() => {
     grid-template-columns: 1fr;
   }
 }
+
+/* Toast Notification */
+.toast-notification {
+  position: fixed;
+  top: 100px;
+  right: 30px;
+  background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+  color: white;
+  padding: 16px 24px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(39, 174, 96, 0.3);
+  font-weight: 600;
+  font-size: 1em;
+  z-index: 2000;
+  animation: slideIn 0.3s ease-out;
+}
+
+.toast-enter-active {
+  animation: slideIn 0.3s ease-out;
+}
+
+.toast-leave-active {
+  animation: slideOut 0.3s ease-in;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+}
+
+/* Button Success State */
+.btn-added {
+  background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%) !important;
+  transform: scale(1.05);
+  animation: successPulse 0.4s ease;
+}
+
+@keyframes successPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1.05);
+  }
+}
+
+@media (max-width: 768px) {
+  .toast-notification {
+    top: 80px;
+    right: 20px;
+    left: 20px;
+    text-align: center;
+  }
+}
 </style>
+

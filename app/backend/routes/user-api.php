@@ -91,3 +91,4 @@ Route::add('/api/reset-password', function () use ($passwordResetService) {
     $data = json_decode(file_get_contents('php://input'), true);
     $passwordResetService->resetPassword($data['token'], $data['password']);
 }, 'put');
+

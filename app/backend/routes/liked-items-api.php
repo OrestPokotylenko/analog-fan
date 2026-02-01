@@ -23,3 +23,4 @@ Route::add('/api/liked-items', function () use ($likedItemController) {
     $result = $likedItemController->deleteLikedItem($data['userId'], $data['itemId']);
     echo json_encode($result);
 }, 'delete');
+

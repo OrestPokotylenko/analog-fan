@@ -1,7 +1,8 @@
 <script setup>
-import { inject, ref, computed, onMounted } from 'vue';
+import { inject, ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from '../services/axiosConfig';
+import CartService from '../services/CartService';
 
 const router = useRouter();
 
@@ -18,6 +19,8 @@ const productTypes = ref([]);
 const isLoadingTypes = ref(false);
 const mobileMenuOpen = ref(false);
 const searchQuery = ref('');
+const cartCount = ref(0);
+const userDropdownOpen = ref(false);
 
 async function fetchProductTypes() {
   try {
@@ -66,7 +69,41 @@ function closeMobileMenu() {
   mobileMenuOpen.value = false;
 }
 
-onMounted(fetchProductTypes);
+async function updateCartCount() {
+  try {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user && user.userId) {
+      cartCount.value = await CartService.getCartCount(user.userId);
+    } else {
+      cartCount.value = 0;
+    }
+  } catch (error) {
+    console.error('Failed to load cart count:', error);
+    cartCount.value = 0;
+  }
+}
+
+function handleStorageChange(e) {
+  if (e.key === 'cart') {
+    updateCartCount();
+  }
+}
+
+function handleCartUpdate() {
+  updateCartCount();
+}
+
+onMounted(() => {
+  fetchProductTypes();
+  updateCartCount();
+  window.addEventListener('storage', handleStorageChange);
+  window.addEventListener('cart-updated', handleCartUpdate);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('storage', handleStorageChange);
+  window.removeEventListener('cart-updated', handleCartUpdate);
+});
 </script>
 
 <template>
@@ -113,17 +150,35 @@ onMounted(fetchProductTypes);
         </div>
 
         <div class="nav-actions">
-          <button class="cart-btn" title="Shopping Cart">
+          <RouterLink to="/cart" class="cart-btn" title="Shopping Cart">
             <span>🛒</span>
-          </button>
-          <RouterLink to="/my-items" class="nav-button primary" @click="closeMobileMenu">Sell</RouterLink>
+            <span v-if="cartCount > 0" class="cart-badge">{{ cartCount }}</span>
+          </RouterLink>
           
           <div v-if="!isLoggedIn" class="auth-buttons">
             <button class="nav-button primary" @click="login">Login</button>
           </div>
           <div v-else class="user-section">
-            <span class="username">{{ user?.username }}</span>
-            <button class="nav-button danger" @click="logout">Logout</button>
+            <div class="user-dropdown-container">
+              <button class="username-btn" @click="userDropdownOpen = !userDropdownOpen">
+                {{ user?.username }}
+                <span class="dropdown-arrow">▼</span>
+              </button>
+              <div :class="['user-dropdown', { 'show': userDropdownOpen }]">
+                <RouterLink to="/profile" class="user-dropdown-item" @click="userDropdownOpen = false; closeMobileMenu()">
+                  <span>👤</span> Profile
+                </RouterLink>
+                <RouterLink to="/wishlist" class="user-dropdown-item" @click="userDropdownOpen = false; closeMobileMenu()">
+                  <span>❤️</span> Wishlist
+                </RouterLink>
+                <RouterLink to="/my-items" class="user-dropdown-item" @click="userDropdownOpen = false; closeMobileMenu()">
+                  <span>🛍️</span> My Items
+                </RouterLink>
+                <button class="user-dropdown-item logout-item" @click="logout">
+                  <span>🚪</span> Logout
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </nav>
@@ -344,10 +399,91 @@ onMounted(fetchProductTypes);
   gap: 15px;
 }
 
-.username {
+.user-dropdown-container {
+  position: relative;
+}
+
+.username-btn {
+  background: transparent;
+  border: 2px solid #e94560;
   color: #e0e0e0;
+  padding: 10px 16px;
+  border-radius: 6px;
   font-weight: 600;
   font-size: 0.95em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s;
+}
+
+.username-btn:hover {
+  background-color: rgba(233, 69, 96, 0.1);
+  color: #e94560;
+}
+
+.dropdown-arrow {
+  font-size: 0.7em;
+  transition: transform 0.3s;
+}
+
+.username-btn:hover .dropdown-arrow {
+  transform: translateY(2px);
+}
+
+.user-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  background: #0f3460;
+  border-radius: 8px;
+  min-width: 200px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  padding: 8px 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  z-index: 100;
+}
+
+.user-dropdown.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.user-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  color: #e0e0e0;
+  text-decoration: none;
+  transition: all 0.3s;
+  font-size: 0.95em;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.user-dropdown-item:hover {
+  background-color: rgba(233, 69, 96, 0.2);
+  color: #e94560;
+}
+
+.user-dropdown-item span {
+  font-size: 1.1em;
+}
+
+.logout-item {
+  border-top: 1px solid rgba(233, 69, 96, 0.2);
+  margin-top: 4px;
+  padding-top: 12px;
 }
 
 .cart-btn {
@@ -360,12 +496,32 @@ onMounted(fetchProductTypes);
   padding: 8px;
   display: flex;
   align-items: center;
+  text-decoration: none;
   justify-content: center;
+  position: relative;
 }
 
 .cart-btn:hover {
   color: #e94560;
   transform: scale(1.1);
+}
+
+.cart-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: linear-gradient(135deg, #e94560 0%, #ff6b7a 100%);
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(233, 69, 96, 0.4);
 }
 
 .auth-buttons {

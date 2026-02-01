@@ -10,7 +10,8 @@ const routes = [
   { path: '/item/:id', component: () => import('../views/ItemDetails.vue') },
   { path: '/my-items', component: () => import('../views/SellingItems.vue') },
   { path: '/my-items/upload', component: () => import('../views/UploadItem.vue') },
-  { path: '/my-items/:id', component: () => import('../views/EditItem.vue') }
+  { path: '/my-items/:id', component: () => import('../views/EditItem.vue') },
+  { path: '/cart', component: () => import('../views/ShoppingCart.vue') }
 ];
 
 const router = createRouter({

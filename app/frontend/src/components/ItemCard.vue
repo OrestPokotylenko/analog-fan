@@ -70,7 +70,7 @@ async function deleteLikedItem(userId) {
         :alt="item.title"
       />
       <div v-else class="card-image-placeholder">No Image</div>
-      <button class="like-btn" @click.stop="likeItem">
+      <button class="like-btn" @click.prevent.stop="likeItem">
         <img :src="isLiked ? likeFilled : likeUnfilled" class="like-icon" />
       </button>
       </div>

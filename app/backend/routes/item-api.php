@@ -203,3 +203,4 @@ Route::add('/api/items/{id}/images/{imageIndex}', function ($id, $imageIndex) us
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
     }
 }, 'delete');
+

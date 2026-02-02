@@ -3,15 +3,18 @@
 namespace App\Features\User;
 
 use App\External\JWTService;
+use App\External\CloudinaryService;
 use Exception;
 
 class UserController {
     private UserModel $userModel;
     private JWTService $jwtService;
+    private CloudinaryService $cloudinaryService;
 
     public function __construct() {
         $this->userModel = new UserModel();
         $this->jwtService = new JWTService();
+        $this->cloudinaryService = new CloudinaryService();
     }
 
     public function userExists($username, $email) {
@@ -35,22 +38,56 @@ class UserController {
             $userData['firstName'],
             $userData['lastName'],
             $userData['username'],
-            $userData['email']
+            $userData['email'],
+            $userData['phoneNumber'] ?? null
         );
         
         return $this->userModel->createUser($user, $userData['password']);
     }
 
-    public function updateUser(int $userId, $userData) {
+    public function updateUser(int $userId, $userData, $imageFile = null) {
+        $existingUser = $this->userModel->getUserById($userId);
+        if (!$existingUser) {
+            throw new Exception('User not found', 404);
+        }
+        
+        // Use existing imageUrl by default
+        $imageUrl = $existingUser['imageUrl'];
+        
+        // Check if user wants to remove image
+        $removeImage = isset($userData['removeImage']) && $userData['removeImage'] === 'true';
+        
+        if ($removeImage) {
+            // Delete existing image from Cloudinary if it exists
+            if (!empty($existingUser['imageUrl'])) {
+                $this->cloudinaryService->deleteImage($existingUser['imageUrl']);
+            }
+            $imageUrl = null;
+        } elseif ($imageFile && isset($imageFile['tmp_name']) && !empty($imageFile['tmp_name'])) {
+            // Delete old image from Cloudinary before uploading new one
+            if (!empty($existingUser['imageUrl'])) {
+                $this->cloudinaryService->deleteImage($existingUser['imageUrl']);
+            }
+            
+            // Upload new image
+            $tmpName = $imageFile['tmp_name'];
+            if (file_exists($tmpName)) {
+                $imageUrl = $this->cloudinaryService->uploadImage($tmpName);
+            }
+        }
+
         $user = new UserDTO(
             $userData['firstName'],
             $userData['lastName'],
             $userData['username'],
             $userData['email'],
-            $userId
+            $userData['phoneNumber'] ?? null,
+            $userId,
+            $imageUrl,
+            new \DateTime($existingUser['createdAt'])
         );
         
-        $this->userModel->updateUser($user);
+        return $this->userModel->updateUser($user);
     }
 
     public function authenticateUser($username, $password) {

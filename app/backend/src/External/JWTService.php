@@ -13,7 +13,7 @@ class JWTService {
         $payload = [
             'iat' => time(),
             'exp' => time() + self::TOKEN_EXPARATION,
-            'userId' => $user->userId
+            'userId' => is_array($user) ? $user['userId'] : $user->userId
         ];
 
         return JWT::encode($payload, $_ENV['JWT_SECRET'], 'HS256');

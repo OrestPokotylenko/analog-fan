@@ -44,12 +44,6 @@ class ItemController {
     }
 
     public function updateItemWithFiles($id, $userId, $title, $description, $price, $type, $files, $existingImages = []) {
-        error_log('updateItemWithFiles called with:');
-        error_log('  title=' . $title . ' (empty=' . (empty($title) ? '1' : '0') . ')');
-        error_log('  description=' . $description . ' (empty=' . (empty($description) ? '1' : '0') . ')');
-        error_log('  price=' . $price . ' (empty=' . (empty($price) ? '1' : '0') . ')');
-        error_log('  type=' . $type . ' (empty=' . (empty($type) ? '1' : '0') . ')');
-
         if (empty($title) || empty($description) || $price <= 0 || empty($type)) {
             throw new Exception('Missing required fields', 400);
         }

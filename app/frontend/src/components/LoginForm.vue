@@ -34,7 +34,6 @@ async function handleLogin() {
       $auth.isLoggedIn = true;
       $auth.token = response.data.token;
       $auth.user = response.data.user;
-
       // Redirect to home page
       router.push('/');
     } else {

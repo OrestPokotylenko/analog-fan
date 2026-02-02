@@ -28,10 +28,13 @@ class UserModel extends BaseModel {
                 $userData['last_name'],
                 $userData['username'],
                 $userData['email'],
-                $userData['user_id']
+                $userData['phone_number'] ?? null,
+                $userData['user_id'],
+                $userData['image_url'] ?? null,
+                new \DateTime($userData['created_at'])
             );
 
-            $users[] = $user;
+            $users[] = $user->toArray();
         }
 
         return $users;
@@ -52,40 +55,48 @@ class UserModel extends BaseModel {
             $userData['last_name'],
             $userData['username'],
             $userData['email'],
-            $userData['user_id']
+            $userData['phone_number'] ?? null,
+            $userData['user_id'],
+            $userData['image_url'] ?? null,
+            new \DateTime($userData['created_at'])
         );
 
-        return $user;
+        return $user->toArray();
     }
 
     public function createUser(UserDTO $user, string $password) {
         try{
-            $sql = "INSERT INTO users (first_name, last_name, username, email, password) VALUES (:first_name, :last_name, :username, :email, :password)";
+            $sql = "INSERT INTO users (first_name, last_name, username, email, password, phone_number) VALUES (:first_name, :last_name, :username, :email, :password, :phone_number)";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([
                 'first_name' => $user->firstName,
                 'last_name' => $user->lastName,
                 'username' => $user->username,
                 'email' => $user->email,
-                'password' => password_hash($password, PASSWORD_DEFAULT)
+                'password' => password_hash($password, PASSWORD_DEFAULT),
+                'phone_number' => $user->phoneNumber
             ]);
         } catch (PDOException $e) {
             return null;            
         }
 
-        return $user;
+        return $user->toArray();
     }
 
     public function updateUser(UserDTO $user) {
-        $sql = "UPDATE users SET first_name = :first_name, last_name = :last_name, username = :username, email = :email WHERE user_id = :user_id";
+        $sql = "UPDATE users SET first_name = :first_name, last_name = :last_name, username = :username, email = :email, phone_number = :phone_number, image_url = :image_url WHERE user_id = :user_id";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
             'user_id' => $user->userId,
             'first_name' => $user->firstName,
             'last_name' => $user->lastName,
             'username' => $user->username,
-            'email' => $user->email
+            'email' => $user->email,
+            'phone_number' => $user->phoneNumber,
+            'image_url' => $user->imageUrl
         ]);
+        
+        return $user->toArray();
     }
 
     public function resetPassword($userId, $password) {
@@ -104,13 +115,17 @@ class UserModel extends BaseModel {
         $userData = $stmt->fetch();
     
         if ($userData && password_verify($password, $userData['password'])) {
-            return new UserDTO(
+            $user = new UserDTO(
                 $userData['first_name'],
                 $userData['last_name'],
                 $userData['username'],
                 $userData['email'],
-                $userData['user_id']
+                $userData['phone_number'] ?? null,
+                $userData['user_id'],
+                $userData['image_url'] ?? null,
+                new \DateTime($userData['created_at'])
             );
+            return $user->toArray();
         }
     
         return null;
@@ -123,14 +138,19 @@ class UserModel extends BaseModel {
         $userData = $stmt->fetch();
 
         if ($userData) {
-            return new UserDTO(
+            $user = new UserDTO(
                 $userData['first_name'],
                 $userData['last_name'],
                 $userData['username'],
                 $userData['email'],
-                $userData['user_id']
+                $userData['phone_number'] ?? null,
+                $userData['user_id'],
+                $userData['image_url'] ?? null,
+                new \DateTime($userData['created_at'])
             );
-        } 
+
+            return $user->toArray();
+        }
 
         return null;
     }

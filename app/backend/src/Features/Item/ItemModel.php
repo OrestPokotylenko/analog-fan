@@ -8,9 +8,9 @@ use Exception;
 class ItemModel extends BaseModel {
     private string $table = 'items';
 
-    public function getItems() {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table}");
-        $stmt->execute();
+    public function getItems($userId) {
+        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE user_id != ?");
+        $stmt->execute([$userId]);
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         return array_map([$this, 'normalizeRow'], $rows);
     }

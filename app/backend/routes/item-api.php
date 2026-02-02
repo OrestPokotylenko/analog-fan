@@ -84,9 +84,10 @@ Route::add('/api/items/type/([0-9]+)', function ($typeId) use ($itemController) 
     }
 });
 
-Route::add('/api/items', function () use ($itemController) {
+Route::add('/api/items', function () use ($itemController, $userController) {
     try {
-        echo json_encode($itemController->getItems());
+        $userId = $userController->getAuthenticatedUser();
+        echo json_encode($itemController->getItems($userId));
     } catch (\Throwable $e) {
         http_response_code(http_status_from_exception($e));
         echo json_encode(['error' => $e->getMessage()]);

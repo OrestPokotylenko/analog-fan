@@ -37,8 +37,27 @@ Route::add('/api/users', function() use ($userController) {
 }, 'post');
 
 Route::add('/api/users/{id}', function($id) use ($userController) {
-    $userData = json_decode(file_get_contents('php://input'), true);
-    $userController->updateUser($id, $userData);
+    global $_PUT, $_PUT_FILES;
+    
+    try {
+        parsePutFormData();
+        
+        // Check if we have multipart data
+        if (!empty($_PUT) || !empty($_PUT_FILES)) {
+            $userData = $_PUT;
+            $imageFile = $_PUT_FILES['image'] ?? null;
+        } else {
+            // Handle JSON data (without image)
+            $userData = json_decode(file_get_contents('php://input'), true);
+            $imageFile = null;
+        }
+        
+        $result = $userController->updateUser($id, $userData, $imageFile);
+        echo json_encode(['success' => true, 'user' => $result]);
+    } catch (\Throwable $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
 }, 'put');
 
 Route::add('/api/authenticate', function () use ($userController) {

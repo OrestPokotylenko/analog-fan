@@ -11,7 +11,8 @@ const routes = [
   { path: '/my-items', component: () => import('../views/SellingItems.vue') },
   { path: '/my-items/upload', component: () => import('../views/UploadItem.vue') },
   { path: '/my-items/:id', component: () => import('../views/EditItem.vue') },
-  { path: '/cart', component: () => import('../views/ShoppingCart.vue') }
+  { path: '/cart', component: () => import('../views/ShoppingCart.vue') },
+  { path: '/profile', component: () => import('../views/Profile.vue') }
 ];
 
 const router = createRouter({

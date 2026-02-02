@@ -20,7 +20,6 @@ async function fetchItem() {
     const response = await axios.get(`/items/${route.params.id}`);
     item.value = response.data;
   } catch (error) {
-    console.error('Fetch error:', error);
     errorMessage.value = 'Failed to load item.';
   }
 }
@@ -31,7 +30,6 @@ async function fetchProductTypes() {
     const response = await axios.get('/product-types');
     productTypes.value = Array.isArray(response.data) ? response.data : [];
   } catch (error) {
-    console.error('Failed to load product types', error);
     productTypes.value = [];
   } finally {
     isLoadingTypes.value = false;
@@ -74,7 +72,6 @@ async function updateItem() {
       errorMessage.value = response.data.error || 'Failed to update item.';
     }
   } catch (error) {
-    console.error('Update error:', error.response?.data || error.message);
     errorMessage.value = error.response?.data?.error || 'Failed to update item.';
   }
 }
@@ -87,7 +84,6 @@ async function deleteImage(index) {
       );
       item.value.imagesPath.splice(index, 1);
     } catch (error) {
-      console.error('Delete image error:', error);
       errorMessage.value = 'Failed to delete image.';
     }
   }

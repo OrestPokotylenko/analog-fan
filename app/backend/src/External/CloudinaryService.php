@@ -33,7 +33,7 @@ class CloudinaryService {
                 }
 
                 $response = $this->cloudinary->uploadApi()->upload($tmpFile, [
-                    'folder' => $_ENV['CLOUDINARY_FOLDER'] ?? 'analog-fan'
+                    'folder' => $_ENV['CLOUDINARY_FOLDER']
                 ]);
                 $uploadedUrls[] = $response['secure_url'];
             } catch (Exception $e) {
@@ -42,6 +42,26 @@ class CloudinaryService {
         }
 
         return $uploadedUrls;
+    }
+
+    public function uploadImage(string $tmpFile): ?string {
+        if (empty($tmpFile)) {
+            return null;
+        }
+
+        try {
+            if (!file_exists($tmpFile)) {
+                return null;
+            }
+
+            $response = $this->cloudinary->uploadApi()->upload($tmpFile, [
+                'folder' => $_ENV['CLOUDINARY_FOLDER']
+            ]);
+            
+            return $response['secure_url'];
+        } catch (Exception $e) {
+            throw new Exception('Failed to upload image: ' . $e->getMessage());
+        }
     }
 
     public function deleteImage($imageUrl): bool {

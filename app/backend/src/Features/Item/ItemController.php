@@ -14,8 +14,8 @@ class ItemController {
         $this->cloudinary = new CloudinaryService();
     }
 
-    public function getItems() {
-        return $this->itemModel->getItems();
+    public function getItems($userId) {
+        return $this->itemModel->getItems($userId);
     }
 
     public function getItemsByType($type) {

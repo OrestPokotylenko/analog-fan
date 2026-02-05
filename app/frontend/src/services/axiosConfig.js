@@ -1,7 +1,11 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost/api'
+  baseURL: 'http://localhost/api',
+  validateStatus: function (status) {
+    // Don't throw errors for 409 Conflict - we'll handle it gracefully
+    return (status >= 200 && status < 300) || status === 409;
+  }
 });
 
 export function setupAxiosInterceptors(auth, router) {
@@ -36,6 +40,7 @@ export function setupAxiosInterceptors(auth, router) {
         // Redirect to login page
         router.push('/login');
       }
+
       return Promise.reject(error);
     }
   );

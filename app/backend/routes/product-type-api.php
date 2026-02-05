@@ -18,3 +18,11 @@ Route::add('/api/product-types', function () use ($productTypeController) {
     $productTypeController->postProductType($data['name']);
 }, 'post');
 
+Route::add('/api/product-types/{id}', function ($id) use ($productTypeController) {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $productTypeController->updateProductType((int)$id, $data['name']);
+}, 'put');
+
+Route::add('/api/product-types/{id}', function ($id) use ($productTypeController) {
+    $productTypeController->deleteProductType((int)$id);
+}, 'delete');

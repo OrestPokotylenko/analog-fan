@@ -8,9 +8,16 @@ use Exception;
 class ItemModel extends BaseModel {
     private string $table = 'items';
 
-    public function getItems($userId) {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE user_id != ?");
-        $stmt->execute([$userId]);
+    public function getItems($userId = null) {
+        if ($userId === null) {
+            // Guest user - show all items
+            $stmt = $this->pdo->prepare("SELECT * FROM {$this->table}");
+            $stmt->execute();
+        } else {
+            // Logged-in user - exclude their own items
+            $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE user_id != ?");
+            $stmt->execute([$userId]);
+        }
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         return array_map([$this, 'normalizeRow'], $rows);
     }

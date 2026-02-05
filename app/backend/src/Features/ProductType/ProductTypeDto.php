@@ -20,4 +20,12 @@ class ProductTypeDto {
             $productTypeData['image_url'] ?? null
         );
     }
+
+    public function toArray(): array {
+        return [
+            'productTypeId' => $this->productTypeId,
+            'typeName' => $this->name,
+            'imageUrl' => $this->imageUrl
+        ];
+    }
 }

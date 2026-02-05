@@ -86,7 +86,13 @@ Route::add('/api/items/type/([0-9]+)', function ($typeId) use ($itemController) 
 
 Route::add('/api/items', function () use ($itemController, $userController) {
     try {
-        $userId = $userController->getAuthenticatedUser();
+        // Try to get authenticated user, but allow null for guests
+        try {
+            $userId = $userController->getAuthenticatedUser();
+        } catch (\Throwable $e) {
+            $userId = null;
+        }
+        
         echo json_encode($itemController->getItems($userId));
     } catch (\Throwable $e) {
         http_response_code(http_status_from_exception($e));

@@ -28,6 +28,28 @@ class ProductTypeModel extends BaseModel {
         return $this->fetchProductTypeById((int)$this->pdo->lastInsertId());
     }
 
+    public function updateProductType(int $productTypeId, $name) {
+        $sql = "UPDATE {$this->table} SET name = ? WHERE product_type_id = ?";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$name, $productTypeId]);
+        return $this->fetchProductTypeById($productTypeId);
+    }
+
+    public function deleteProductType(int $productTypeId) {
+        try {
+            $sql = "DELETE FROM {$this->table} WHERE product_type_id = ?";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$productTypeId]);
+            return ['success' => true, 'message' => 'Product type deleted'];
+        } catch (\PDOException $e) {
+            // Check if it's a foreign key constraint error
+            if ($e->getCode() == '23000') {
+                return ['success' => false, 'error' => 'constraint', 'message' => 'Cannot delete product type because it is being used by items'];
+            }
+            throw $e;
+        }
+    }
+
     private function normalizeRow(array $row): array {
         return [
             'product_type_id' => (int)$row['product_type_id'],

@@ -19,6 +19,8 @@ const activeTab = ref('dashboard');
 const showTypeModal = ref(false);
 const editingType = ref(null);
 const typeFormName = ref('');
+const typeFormImage = ref(null);
+const imagePreview = ref(null);
 const showConfirmModal = ref(false);
 const confirmAction = ref(null);
 const confirmMessage = ref('');
@@ -143,12 +145,16 @@ function closeErrorModal() {
 function openCreateTypeModal() {
   editingType.value = null;
   typeFormName.value = '';
+  typeFormImage.value = null;
+  imagePreview.value = null;
   showTypeModal.value = true;
 }
 
 function openEditTypeModal(type) {
   editingType.value = type;
   typeFormName.value = type.typeName;
+  typeFormImage.value = null;
+  imagePreview.value = type.imageUrl || null;
   showTypeModal.value = true;
 }
 
@@ -156,6 +162,20 @@ function closeTypeModal() {
   showTypeModal.value = false;
   editingType.value = null;
   typeFormName.value = '';
+  typeFormImage.value = null;
+  imagePreview.value = null;
+}
+
+function handleImageChange(event) {
+  const file = event.target.files[0];
+  if (file) {
+    typeFormImage.value = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      imagePreview.value = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
 }
 
 async function saveProductType() {
@@ -165,15 +185,26 @@ async function saveProductType() {
   }
 
   try {
+    const formData = new FormData();
+    formData.append('name', typeFormName.value);
+    
+    if (typeFormImage.value) {
+      formData.append('image', typeFormImage.value);
+    }
+
     if (editingType.value) {
       // Update existing type
-      await axios.put(`/product-types/${editingType.value.productTypeId}`, {
-        name: typeFormName.value
+      await axios.put(`/product-types/${editingType.value.productTypeId}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       });
     } else {
       // Create new type
-      await axios.post('/product-types', {
-        name: typeFormName.value
+      await axios.post('/product-types', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       });
     }
     closeTypeModal();
@@ -346,6 +377,7 @@ function logout() {
             <thead>
               <tr>
                 <th>ID</th>
+                <th>Image</th>
                 <th>Name</th>
                 <th>Actions</th>
               </tr>
@@ -353,6 +385,15 @@ function logout() {
             <tbody>
               <tr v-for="type in productTypes" :key="type.productTypeId">
                 <td>{{ type.productTypeId }}</td>
+                <td>
+                  <img 
+                    v-if="type.imageUrl" 
+                    :src="type.imageUrl" 
+                    alt="Product type image"
+                    class="table-thumb"
+                  />
+                  <span v-else class="no-image">No image</span>
+                </td>
                 <td>{{ type.typeName }}</td>
                 <td>
                   <button @click="openEditTypeModal(type)" class="btn-edit">
@@ -385,6 +426,18 @@ function logout() {
               placeholder="Enter product type name"
               class="form-input"
             />
+          </div>
+          <div class="form-group">
+            <label>Type Image</label>
+            <input 
+              type="file" 
+              accept="image/*"
+              @change="handleImageChange"
+              class="form-input"
+            />
+            <div v-if="imagePreview" class="image-preview">
+              <img :src="imagePreview" alt="Preview" />
+            </div>
           </div>
         </div>
         <div class="modal-footer">
@@ -606,6 +659,20 @@ function logout() {
   background: rgba(255, 255, 255, 0.03);
 }
 
+.table-thumb {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.no-image {
+  color: #666;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
 .badge {
   padding: 5px 10px;
   border-radius: 20px;
@@ -778,6 +845,20 @@ function logout() {
   outline: none;
   border-color: #667eea;
   background: rgba(255, 255, 255, 0.08);
+}
+
+.image-preview {
+  margin-top: 15px;
+  max-width: 300px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.image-preview img {
+  width: 100%;
+  height: auto;
+  display: block;
 }
 
 .modal-footer {

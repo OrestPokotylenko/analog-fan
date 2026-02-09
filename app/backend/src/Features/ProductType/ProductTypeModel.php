@@ -28,10 +28,16 @@ class ProductTypeModel extends BaseModel {
         return $this->fetchProductTypeById((int)$this->pdo->lastInsertId());
     }
 
-    public function updateProductType(int $productTypeId, $name) {
-        $sql = "UPDATE {$this->table} SET name = ? WHERE product_type_id = ?";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$name, $productTypeId]);
+    public function updateProductType(int $productTypeId, $name, $imageUrl = null) {
+        if ($imageUrl !== null) {
+            $sql = "UPDATE {$this->table} SET name = ?, image_url = ? WHERE product_type_id = ?";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$name, $imageUrl, $productTypeId]);
+        } else {
+            $sql = "UPDATE {$this->table} SET name = ? WHERE product_type_id = ?";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$name, $productTypeId]);
+        }
         return $this->fetchProductTypeById($productTypeId);
     }
 

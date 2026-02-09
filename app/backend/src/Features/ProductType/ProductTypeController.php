@@ -2,11 +2,15 @@
 
 namespace App\Features\ProductType;
 
+use App\External\CloudinaryService;
+
 class ProductTypeController {
     private ProductTypeModel $model;
+    private CloudinaryService $cloudinary;
 
     public function __construct() {
         $this->model = new ProductTypeModel();
+        $this->cloudinary = new CloudinaryService();
     }
 
     public function getProductTypes() {
@@ -28,12 +32,32 @@ class ProductTypeController {
     }
 
     public function postProductType($name) {
-        $newProductType = $this->model->postProductType($name, null);
+        $imageUrl = null;
+        
+        // Handle image upload if provided
+        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+            $imageUrl = $this->cloudinary->uploadImage($_FILES['image']['tmp_name']);
+        }
+        
+        $newProductType = $this->model->postProductType($name, $imageUrl);
         echo json_encode(ProductTypeDto::toDTO($newProductType)->toArray());
     }
 
     public function updateProductType(int $productTypeId, $name) {
-        $updatedProductType = $this->model->updateProductType($productTypeId, $name);
+        $imageUrl = null;
+        
+        // Handle image upload if provided
+        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+            // Get existing product type to delete old image if exists
+            $existingType = $this->model->fetchProductTypeById($productTypeId);
+            if ($existingType && $existingType['image_url']) {
+                $this->cloudinary->deleteImage($existingType['image_url']);
+            }
+            
+            $imageUrl = $this->cloudinary->uploadImage($_FILES['image']['tmp_name']);
+        }
+        
+        $updatedProductType = $this->model->updateProductType($productTypeId, $name, $imageUrl);
         if ($updatedProductType) {
             echo json_encode(ProductTypeDto::toDTO($updatedProductType)->toArray());
         } else {

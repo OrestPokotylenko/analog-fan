@@ -147,12 +147,12 @@ onMounted(async () => {
             v-for="category in categories"
             :key="category.productTypeId"
             class="category-card"
-            @click="navigateToCategory(category.name)"
+            @click="navigateToCategory(category.typeName)"
           >
-            <div class="card-background"></div>
+            <div class="card-background" :style="category.imageUrl ? { backgroundImage: `url(${category.imageUrl})` } : {}"></div>
             <div class="card-content">
-              <div class="card-icon">🎵</div>
-              <h2 class="card-title">{{ category.name }}</h2>
+              <div v-if="!category.imageUrl" class="card-icon">🎵</div>
+              <h2 class="card-title">{{ category.typeName }}</h2>
               <p class="card-subtitle">Browse collection</p>
               <div class="card-arrow">→</div>
             </div>
@@ -246,6 +246,19 @@ onMounted(async () => {
   width: 100%;
   height: 100%;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  background-size: cover;
+  background-position: center;
+  z-index: 1;
+}
+
+.card-background::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(26, 26, 46, 0.7) 0%, rgba(22, 33, 62, 0.8) 100%);
   z-index: 1;
 }
 

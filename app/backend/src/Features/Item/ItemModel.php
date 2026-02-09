@@ -38,7 +38,7 @@ class ItemModel extends BaseModel {
 
     public function postItem($userId, $title, $description, $price, $type, $imagesPath) {
         $imageJson = json_encode(is_array($imagesPath) ? $imagesPath : []);
-        $sql = "INSERT INTO {$this->table} (user_id, title, description, price, type, images)
+        $sql = "INSERT INTO {$this->table} (user_id, title, description, price, product_type_id, images)
                 VALUES (?, ?, ?, ?, ?, ?)";
         $stmt = $this->pdo->prepare($sql);
 
@@ -52,7 +52,7 @@ class ItemModel extends BaseModel {
     public function updateItem($id, $userId, $title, $description, $price, $type, $imagesPath) {
         $imageJson = json_encode(is_array($imagesPath) ? $imagesPath : []);
         $sql = "UPDATE {$this->table}
-                SET title = ?, description = ?, price = ?, type = ?, images = ?
+                SET title = ?, description = ?, price = ?, product_type_id = ?, images = ?
                 WHERE item_id = ? AND user_id = ?";
         $stmt = $this->pdo->prepare($sql);
 

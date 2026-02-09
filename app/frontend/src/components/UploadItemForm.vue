@@ -6,6 +6,7 @@ import TextInput from './reusable/TextInput.vue';
 
 const title = ref('');
 const images = ref();
+const imagePreviews = ref([]);
 const description = ref('');
 const price = ref('');
 const type = ref('');
@@ -43,9 +44,11 @@ async function handleSubmit() {
   formData.append('price', price.value);
   formData.append('type', type.value);
 
-  images.value.forEach((image) => {
-    formData.append('images[]', image);
-  });
+  if (images.value && images.value.length > 0) {
+    images.value.forEach((image) => {
+      formData.append('images[]', image);
+    });
+  }
 
   await postItem(formData);
 }
@@ -66,10 +69,12 @@ async function postItem(data) {
             type.value = '';
             submitButton.disabled = false;
 
-            router.push('/your-items');
+            router.push('/my-items');
         }
     } catch (error) {
-        alert('An error occurred while publishing the item. Please try again.');
+        console.error('Failed to publish item:', error);
+        submitButton.disabled = false;
+        // You can add a nicer error display here if needed
     }
 }
 
@@ -86,6 +91,20 @@ function validateImages(event) {
   }
 
   images.value = [...(images.value || []), ...validFiles];
+  
+  // Create previews
+  validFiles.forEach((file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      imagePreviews.value.push(e.target.result);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function removeImage(index) {
+  images.value.splice(index, 1);
+  imagePreviews.value.splice(index, 1);
 }
 
 function validatePrice() {
@@ -135,7 +154,7 @@ function validatePrice() {
                 >
                     <option value="" disabled>Select item type</option>
                     <option v-for="t in productTypes" :key="t.productTypeId" :value="t.productTypeId">
-                        {{ t.name }}
+                        {{ t.typeName }}
                     </option>
                 </select>
             </div>
@@ -158,13 +177,28 @@ function validatePrice() {
                     v-model="description" 
                     class="form-textarea"
                     placeholder="Describe the item condition, features, and any notable details..."
-                    rows="5" 
-                    required
+                    rows="5"
                 ></textarea>
             </div>
 
             <div class="form-group">
                 <label for="images" class="form-label">Images (PNG/JPG)</label>
+                
+                <!-- Image Previews -->
+                <div v-if="imagePreviews.length > 0" class="image-previews">
+                    <div v-for="(preview, index) in imagePreviews" :key="index" class="preview-item">
+                        <img :src="preview" :alt="`Preview ${index + 1}`" class="preview-image" />
+                        <button 
+                            type="button" 
+                            class="btn-remove-preview" 
+                            @click="removeImage(index)"
+                            title="Remove image"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                </div>
+
                 <div class="file-input-wrapper">
                     <input 
                         id="images" 
@@ -181,7 +215,10 @@ function validatePrice() {
                 </div>
             </div>
 
-            <button id="submitButton" type="submit" class="btn-submit">Publish Item</button>
+            <button id="submitButton" type="submit" class="btn-submit">
+                <span class="btn-icon">📤</span>
+                <span>Publish Item</span>
+            </button>
         </form>
     </div>
 </template>
@@ -258,8 +295,17 @@ function validatePrice() {
 }
 
 .form-select option {
-    background: #1a1a2e;
+    background: #16213e;
     color: white;
+    padding: 10px;
+}
+
+.form-select option:hover {
+    background: #1f2c4d;
+}
+
+.form-select option[disabled] {
+    color: #666;
 }
 
 .form-textarea {
@@ -270,6 +316,61 @@ function validatePrice() {
 .form-textarea::placeholder,
 .form-select {
     color: #b0b0b0;
+}
+
+/* Image Previews */
+.image-previews {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.preview-item {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid #1a1a2e;
+    transition: all 0.3s;
+}
+
+.preview-item:hover {
+    border-color: #e94560;
+}
+
+.preview-image {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+}
+
+.btn-remove-preview {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: #e94560;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: white;
+    font-weight: bold;
+    font-size: 1.2em;
+    transition: all 0.3s;
+    opacity: 0;
+}
+
+.preview-item:hover .btn-remove-preview {
+    opacity: 1;
+}
+
+.btn-remove-preview:hover {
+    background: #ff6b7a;
+    transform: scale(1.1);
 }
 
 .file-input-wrapper {
@@ -317,28 +418,52 @@ function validatePrice() {
 }
 
 .btn-submit {
-    background: linear-gradient(135deg, #e94560 0%, #ff6b7a 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 14px 30px;
+    padding: 16px 40px;
     border: none;
-    border-radius: 8px;
-    font-size: 1em;
+    border-radius: 10px;
+    font-size: 1.1em;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1.5px;
     cursor: pointer;
     transition: all 0.3s;
     margin-top: 15px;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
 }
 
 .btn-submit:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
     transform: translateY(-3px);
-    box-shadow: 0 10px 30px rgba(233, 69, 96, 0.4);
+    box-shadow: 0 12px 35px rgba(102, 126, 234, 0.5);
+}
+
+.btn-submit:active {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
 }
 
 .btn-submit:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+}
+
+.btn-icon {
+    font-size: 1.3rem;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-5px); }
 }
 
 @media (max-width: 768px) {

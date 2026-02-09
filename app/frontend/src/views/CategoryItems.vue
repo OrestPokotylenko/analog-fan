@@ -39,7 +39,7 @@ async function fetchProductTypes() {
 }
 
 function matchTypeNameToId() {
-  const type = productTypes.value.find(t => t.name.toLowerCase() === categoryType.value.toLowerCase());
+  const type = productTypes.value.find(t => t.typeName.toLowerCase() === categoryType.value.toLowerCase());
   productTypeId.value = type ? type.productTypeId : null;
 }
 

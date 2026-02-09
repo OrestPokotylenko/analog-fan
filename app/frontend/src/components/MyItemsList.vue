@@ -1,12 +1,21 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import axios from '../services/axiosConfig';
 import MyItemCard from '../components/MyItemCard.vue';
 
 const items = ref([]);
+const route = useRoute();
 
 onMounted(async () => {
     await fetchItems();
+});
+
+// Refetch items when navigating back to this component
+watch(() => route.path, async (newPath) => {
+    if (newPath === '/my-items') {
+        await fetchItems();
+    }
 });
 
 async function fetchItems() {

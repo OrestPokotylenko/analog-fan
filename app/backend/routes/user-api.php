@@ -5,6 +5,7 @@ use App\Features\ResetPassword\LinkController;
 use App\External\JWTService;
 use App\Features\ResetPassword\PasswordResetService;
 use App\Core\Route;
+use App\Features\User\Role;
 
 $userController = new UserController();
 $jwtService = new JWTService();
@@ -24,7 +25,7 @@ Route::add('/api/users', function() use ($userController) {
     $userExists = $userController->userExists($userData['username'], $userData['email']);
 
     if (!$userExists) {
-        $createdUser = $userController->createUser($userData);
+        $createdUser = $userController->createUser($userData, Role::USER);
 
         if ($createdUser) {
             echo json_encode(['success' => true, 'user' => $createdUser]);
@@ -52,7 +53,7 @@ Route::add('/api/users/{id}', function($id) use ($userController) {
             $imageFile = null;
         }
         
-        $result = $userController->updateUser($id, $userData, $imageFile);
+        $result = $userController->updateUser($id, $userData, Role::USER, $imageFile);
         echo json_encode(['success' => true, 'user' => $result]);
     } catch (\Throwable $e) {
         http_response_code(500);

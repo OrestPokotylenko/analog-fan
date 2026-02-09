@@ -29,7 +29,7 @@ class UserController {
         return $this->userModel->getUserById($userId);
     }
 
-    public function createUser($userData) {
+    public function createUser($userData, $role) {
         if ($userData['password'] !== $userData['repeatPassword']) {
             return null;   
         }
@@ -39,13 +39,14 @@ class UserController {
             $userData['lastName'],
             $userData['username'],
             $userData['email'],
+            $role,
             $userData['phoneNumber'] ?? null
         );
         
         return $this->userModel->createUser($user, $userData['password']);
     }
 
-    public function updateUser(int $userId, $userData, $imageFile = null) {
+    public function updateUser(int $userId, $userData, $role, $imageFile = null) {
         $existingUser = $this->userModel->getUserById($userId);
         if (!$existingUser) {
             throw new Exception('User not found', 404);
@@ -81,6 +82,7 @@ class UserController {
             $userData['lastName'],
             $userData['username'],
             $userData['email'],
+            $role,
             $userData['phoneNumber'] ?? null,
             $userId,
             $imageUrl,

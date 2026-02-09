@@ -14,7 +14,25 @@ Route::add('/api/product-types', function () use ($productTypeController) {
 });
 
 Route::add('/api/product-types', function () use ($productTypeController) {
-    $data = json_decode(file_get_contents('php://input'), true);
-    $productTypeController->postProductType($data['name']);
+    $name = $_POST['name'] ?? null;
+    if (!$name) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Name is required']);
+        return;
+    }
+    $productTypeController->postProductType($name);
 }, 'post');
 
+Route::add('/api/product-types/{id}', function ($id) use ($productTypeController) {
+    $name = $_POST['name'] ?? null;
+    if (!$name) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Name is required']);
+        return;
+    }
+    $productTypeController->updateProductType((int)$id, $name);
+}, 'put');
+
+Route::add('/api/product-types/{id}', function ($id) use ($productTypeController) {
+    $productTypeController->deleteProductType((int)$id);
+}, 'delete');

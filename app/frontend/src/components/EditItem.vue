@@ -10,6 +10,10 @@ const errorMessage = ref('');
 const newImages = ref([]);
 const productTypes = ref([]);
 const isLoadingTypes = ref(false);
+const showConfirmModal = ref(false);
+const confirmAction = ref(null);
+const confirmMessage = ref('');
+const confirmTitle = ref('');
 
 onMounted(async () => {
   await Promise.all([fetchItem(), fetchProductTypes()]);
@@ -19,6 +23,10 @@ async function fetchItem() {
   try {
     const response = await axios.get(`/items/${route.params.id}`);
     item.value = response.data;
+    // Ensure price is formatted to 2 decimal places
+    if (item.value && item.value.price !== undefined) {
+      item.value.price = parseFloat(item.value.price).toFixed(2);
+    }
   } catch (error) {
     errorMessage.value = 'Failed to load item.';
   }
@@ -77,7 +85,9 @@ async function updateItem() {
 }
 
 async function deleteImage(index) {
-  if (confirm('Are you sure you want to delete this image?')) {
+  confirmTitle.value = 'Delete Image';
+  confirmMessage.value = 'Are you sure you want to delete this image? This action cannot be undone.';
+  confirmAction.value = async () => {
     try {
       await axios.delete(
         `/items/${route.params.id}/images/${index}`
@@ -86,22 +96,41 @@ async function deleteImage(index) {
     } catch (error) {
       errorMessage.value = 'Failed to delete image.';
     }
-  }
+  };
+  showConfirmModal.value = true;
 }
 
 async function deleteItem() {
-  if (!confirm('Delete this item? This cannot be undone.')) return;
-  try {
-    const resp = await axios.delete(`/items/${route.params.id}`);
-    if (resp.data?.success !== false) {
-      router.push('/my-items');
-    } else {
-      errorMessage.value = resp.data.error || 'Failed to delete item.';
+  confirmTitle.value = 'Delete Item';
+  confirmMessage.value = 'Are you sure you want to delete this item? This action cannot be undone.';
+  confirmAction.value = async () => {
+    try {
+      const resp = await axios.delete(`/items/${route.params.id}`);
+      if (resp.data?.success !== false) {
+        router.push('/my-items');
+      } else {
+        errorMessage.value = resp.data.error || 'Failed to delete item.';
+      }
+    } catch (error) {
+      console.error('Delete item error:', error.response?.data || error.message);
+      errorMessage.value = error.response?.data?.error || 'Failed to delete item.';
     }
-  } catch (error) {
-    console.error('Delete item error:', error.response?.data || error.message);
-    errorMessage.value = error.response?.data?.error || 'Failed to delete item.';
+  };
+  showConfirmModal.value = true;
+}
+
+async function confirmDelete() {
+  if (confirmAction.value) {
+    await confirmAction.value();
   }
+  closeConfirmModal();
+}
+
+function closeConfirmModal() {
+  showConfirmModal.value = false;
+  confirmAction.value = null;
+  confirmMessage.value = '';
+  confirmTitle.value = '';
 }
 </script>
 
@@ -169,7 +198,7 @@ async function deleteItem() {
       <!-- Price -->
       <div class="form-group">
         <label class="form-label">Price (€)</label>
-        <input v-model.number="item.price" type="number" step="0.01" min="0" class="form-input" required />
+        <input v-model="item.price" type="text" step="0.01" min="0" class="form-input" required />
       </div>
 
       <!-- Type -->
@@ -190,6 +219,23 @@ async function deleteItem() {
         <button type="button" class="btn btn-danger" @click="deleteItem">Delete Item</button>
       </div>
     </form>
+
+    <!-- Confirmation Modal -->
+    <div v-if="showConfirmModal" class="modal-overlay" @click="closeConfirmModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <div class="warning-icon">⚠️</div>
+          <h3>{{ confirmTitle }}</h3>
+        </div>
+        <div class="modal-body">
+          <p>{{ confirmMessage }}</p>
+        </div>
+        <div class="modal-actions">
+          <button @click="confirmDelete" class="btn-confirm">Confirm</button>
+          <button @click="closeConfirmModal" class="btn-cancel">Cancel</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -495,6 +541,135 @@ async function deleteItem() {
 
   .file-icon {
     font-size: 1.8em;
+  }
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-content {
+  background: linear-gradient(135deg, #16213e 0%, #0f0f1e 100%);
+  border: 2px solid #e94560;
+  border-radius: 12px;
+  padding: 30px;
+  max-width: 450px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.3s ease-out;
+}
+
+.modal-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.warning-icon {
+  font-size: 3em;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.modal-header h3 {
+  color: white;
+  font-size: 1.5em;
+  font-weight: 700;
+  margin: 10px 0 0 0;
+}
+
+.modal-body {
+  margin-bottom: 25px;
+}
+
+.modal-body p {
+  color: #b0b0b0;
+  font-size: 1em;
+  line-height: 1.5;
+  margin: 0;
+  text-align: center;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-confirm {
+  flex: 1;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #e94560 0%, #ff6b7a 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-confirm:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(233, 69, 96, 0.4);
+}
+
+.btn-cancel {
+  flex: 1;
+  padding: 12px 24px;
+  background: transparent;
+  color: white;
+  border: 2px solid #e94560;
+  border-radius: 8px;
+  font-size: 0.95em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-cancel:hover {
+  background: rgba(233, 69, 96, 0.1);
+  transform: translateY(-2px);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
   }
 }
 </style>

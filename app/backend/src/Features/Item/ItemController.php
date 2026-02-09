@@ -14,7 +14,7 @@ class ItemController {
         $this->cloudinary = new CloudinaryService();
     }
 
-    public function getItems($userId) {
+    public function getItems($userId = null) {
         return $this->itemModel->getItems($userId);
     }
 
@@ -31,7 +31,7 @@ class ItemController {
     }
 
     public function postItem($userId, $title, $description, $price, $type, $files) {
-        if (empty($title) || empty($description) || $price <= 0 || empty($type)) {
+        if (empty($title) || $price <= 0 || empty($type)) {
             throw new Exception('Missing required fields', 400);
         }
 
@@ -44,7 +44,7 @@ class ItemController {
     }
 
     public function updateItemWithFiles($id, $userId, $title, $description, $price, $type, $files, $existingImages = []) {
-        if (empty($title) || empty($description) || $price <= 0 || empty($type)) {
+        if (empty($title) || $price <= 0 || empty($type)) {
             throw new Exception('Missing required fields', 400);
         }
 

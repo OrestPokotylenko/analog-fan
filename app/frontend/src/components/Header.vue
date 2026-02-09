@@ -140,11 +140,11 @@ onBeforeUnmount(() => {
             <RouterLink 
               v-for="type in productTypes" 
               :key="type.productTypeId"
-              :to="`/category/${type.name.toLowerCase()}`"
+              :to="`/category/${type.typeName.toLowerCase()}`"
               class="dropdown-item"
               @click="closeMobileMenu"
             >
-              {{ type.name }}
+              {{ type.typeName }}
             </RouterLink>
           </div>
         </div>

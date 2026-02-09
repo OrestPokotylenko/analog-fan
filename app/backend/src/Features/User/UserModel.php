@@ -28,6 +28,7 @@ class UserModel extends BaseModel {
                 $userData['last_name'],
                 $userData['username'],
                 $userData['email'],
+                Role::from($userData['role']),
                 $userData['phone_number'] ?? null,
                 $userData['user_id'],
                 $userData['image_url'] ?? null,
@@ -55,6 +56,7 @@ class UserModel extends BaseModel {
             $userData['last_name'],
             $userData['username'],
             $userData['email'],
+            Role::from($userData['role']),
             $userData['phone_number'] ?? null,
             $userData['user_id'],
             $userData['image_url'] ?? null,
@@ -66,7 +68,7 @@ class UserModel extends BaseModel {
 
     public function createUser(UserDTO $user, string $password) {
         try{
-            $sql = "INSERT INTO users (first_name, last_name, username, email, password, phone_number) VALUES (:first_name, :last_name, :username, :email, :password, :phone_number)";
+            $sql = "INSERT INTO users (first_name, last_name, username, email, password, phone_number, role) VALUES (:first_name, :last_name, :username, :email, :password, :phone_number, :role)";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([
                 'first_name' => $user->firstName,
@@ -74,7 +76,8 @@ class UserModel extends BaseModel {
                 'username' => $user->username,
                 'email' => $user->email,
                 'password' => password_hash($password, PASSWORD_DEFAULT),
-                'phone_number' => $user->phoneNumber
+                'phone_number' => $user->phoneNumber,
+                'role' => $user->role->value
             ]);
         } catch (PDOException $e) {
             return null;            
@@ -120,6 +123,7 @@ class UserModel extends BaseModel {
                 $userData['last_name'],
                 $userData['username'],
                 $userData['email'],
+                Role::from($userData['role']),
                 $userData['phone_number'] ?? null,
                 $userData['user_id'],
                 $userData['image_url'] ?? null,
@@ -143,6 +147,7 @@ class UserModel extends BaseModel {
                 $userData['last_name'],
                 $userData['username'],
                 $userData['email'],
+                Role::from($userData['role']),
                 $userData['phone_number'] ?? null,
                 $userData['user_id'],
                 $userData['image_url'] ?? null,

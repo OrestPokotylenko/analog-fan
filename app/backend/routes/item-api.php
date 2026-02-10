@@ -16,60 +16,62 @@ function http_status_from_exception($e): int {
         : 500;
 }
 
-function parsePutFormData() {
-    global $_PUT, $_PUT_FILES;
-    
-    $_PUT = [];
-    $_PUT_FILES = [];
-    
-    $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
-    
-    if (strpos($contentType, 'multipart/form-data') === false) {
-        return;
-    }
-    
-    $raw = file_get_contents('php://input');
-    preg_match('/boundary=(.*)$/', $contentType, $matches);
-    $boundary = $matches[1] ?? '';
-    
-    if (empty($boundary)) {
-        return;
-    }
-    
-    $parts = array_slice(explode("--$boundary", $raw), 1);
-    
-    foreach ($parts as $part) {
-        if ($part == "--\r\n" || empty(trim($part))) continue;
+if (!function_exists('parsePutFormData')) {
+    function parsePutFormData() {
+        global $_PUT, $_PUT_FILES;
         
-        list($rawHeaders, $content) = explode("\r\n\r\n", $part, 2);
-        $content = substr($content, 0, -2);
+        $_PUT = [];
+        $_PUT_FILES = [];
         
-        preg_match('/name="([^"]*)"/', $rawHeaders, $nameMatch);
-        $name = $nameMatch[1] ?? '';
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
         
-        if (preg_match('/filename="([^"]*)"/', $rawHeaders, $fileMatch)) {
-            $filename = $fileMatch[1];
-            $tmpName = tempnam(sys_get_temp_dir(), 'php');
-            file_put_contents($tmpName, $content);
+        if (strpos($contentType, 'multipart/form-data') === false) {
+            return;
+        }
+        
+        $raw = file_get_contents('php://input');
+        preg_match('/boundary=(.*)$/', $contentType, $matches);
+        $boundary = $matches[1] ?? '';
+        
+        if (empty($boundary)) {
+            return;
+        }
+        
+        $parts = array_slice(explode("--$boundary", $raw), 1);
+        
+        foreach ($parts as $part) {
+            if ($part == "--\r\n" || empty(trim($part))) continue;
             
-            if (strpos($name, '[]') !== false) {
-                $name = str_replace('[]', '', $name);
-                $_PUT_FILES[$name]['name'][] = $filename;
-                $_PUT_FILES[$name]['tmp_name'][] = $tmpName;
-                $_PUT_FILES[$name]['size'][] = filesize($tmpName);
+            list($rawHeaders, $content) = explode("\r\n\r\n", $part, 2);
+            $content = substr($content, 0, -2);
+            
+            preg_match('/name="([^"]*)"/', $rawHeaders, $nameMatch);
+            $name = $nameMatch[1] ?? '';
+            
+            if (preg_match('/filename="([^"]*)"/', $rawHeaders, $fileMatch)) {
+                $filename = $fileMatch[1];
+                $tmpName = tempnam(sys_get_temp_dir(), 'php');
+                file_put_contents($tmpName, $content);
+                
+                if (strpos($name, '[]') !== false) {
+                    $name = str_replace('[]', '', $name);
+                    $_PUT_FILES[$name]['name'][] = $filename;
+                    $_PUT_FILES[$name]['tmp_name'][] = $tmpName;
+                    $_PUT_FILES[$name]['size'][] = filesize($tmpName);
+                } else {
+                    $_PUT_FILES[$name] = [
+                        'name' => $filename,
+                        'tmp_name' => $tmpName,
+                        'size' => filesize($tmpName)
+                    ];
+                }
             } else {
-                $_PUT_FILES[$name] = [
-                    'name' => $filename,
-                    'tmp_name' => $tmpName,
-                    'size' => filesize($tmpName)
-                ];
-            }
-        } else {
-            if (strpos($name, '[]') !== false) {
-                $name = str_replace('[]', '', $name);
-                $_PUT[$name][] = $content;
-            } else {
-                $_PUT[$name] = $content;
+                if (strpos($name, '[]') !== false) {
+                    $name = str_replace('[]', '', $name);
+                    $_PUT[$name][] = $content;
+                } else {
+                    $_PUT[$name] = $content;
+                }
             }
         }
     }

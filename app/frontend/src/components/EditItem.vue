@@ -14,6 +14,10 @@ const showConfirmModal = ref(false);
 const confirmAction = ref(null);
 const confirmMessage = ref('');
 const confirmTitle = ref('');
+const isUpdating = ref(false);
+const isDeletingImage = ref(false);
+const isDeletingItem = ref(false);
+const isConfirming = ref(false);
 
 onMounted(async () => {
   await Promise.all([fetchItem(), fetchProductTypes()]);
@@ -50,7 +54,10 @@ function handleImageUpload(event) {
 }
 
 async function updateItem() {
+  if (isUpdating.value) return;
+  
   try {
+    isUpdating.value = true;
     const formData = new FormData();
     formData.append('title', String(item.value.title ?? ''));
     formData.append('description', String(item.value.description ?? ''));
@@ -81,30 +88,40 @@ async function updateItem() {
     }
   } catch (error) {
     errorMessage.value = error.response?.data?.error || 'Failed to update item.';
+  } finally {
+    isUpdating.value = false;
   }
 }
 
 async function deleteImage(index) {
+  if (isDeletingImage.value) return;
+  
   confirmTitle.value = 'Delete Image';
   confirmMessage.value = 'Are you sure you want to delete this image? This action cannot be undone.';
   confirmAction.value = async () => {
     try {
+      isDeletingImage.value = true;
       await axios.delete(
         `/items/${route.params.id}/images/${index}`
       );
       item.value.imagesPath.splice(index, 1);
     } catch (error) {
       errorMessage.value = 'Failed to delete image.';
+    } finally {
+      isDeletingImage.value = false;
     }
   };
   showConfirmModal.value = true;
 }
 
 async function deleteItem() {
+  if (isDeletingItem.value) return;
+  
   confirmTitle.value = 'Delete Item';
   confirmMessage.value = 'Are you sure you want to delete this item? This action cannot be undone.';
   confirmAction.value = async () => {
     try {
+      isDeletingItem.value = true;
       const resp = await axios.delete(`/items/${route.params.id}`);
       if (resp.data?.success !== false) {
         router.push('/my-items');
@@ -114,16 +131,23 @@ async function deleteItem() {
     } catch (error) {
       console.error('Delete item error:', error.response?.data || error.message);
       errorMessage.value = error.response?.data?.error || 'Failed to delete item.';
+    } finally {
+      isDeletingItem.value = false;
     }
   };
   showConfirmModal.value = true;
 }
 
 async function confirmDelete() {
-  if (confirmAction.value) {
+  if (isConfirming.value || !confirmAction.value) return;
+  
+  try {
+    isConfirming.value = true;
     await confirmAction.value();
+  } finally {
+    isConfirming.value = false;
+    closeConfirmModal();
   }
-  closeConfirmModal();
 }
 
 function closeConfirmModal() {
@@ -157,6 +181,7 @@ function closeConfirmModal() {
               class="btn-delete-image" 
               @click="deleteImage(idx)"
               title="Delete image"
+              :disabled="isDeletingImage"
             >
               ✕
             </button>
@@ -214,9 +239,29 @@ function closeConfirmModal() {
 
       <!-- Actions -->
       <div class="form-actions">
-        <button type="submit" class="btn btn-primary">Save Changes</button>
-        <button type="button" class="btn btn-secondary" @click="router.push('/my-items')">Cancel</button>
-        <button type="button" class="btn btn-danger" @click="deleteItem">Delete Item</button>
+        <button 
+          type="submit" 
+          class="btn btn-primary"
+          :disabled="isUpdating"
+        >
+          {{ isUpdating ? 'Saving...' : 'Save Changes' }}
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-secondary" 
+          @click="router.push('/my-items')"
+          :disabled="isUpdating"
+        >
+          Cancel
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-danger" 
+          @click="deleteItem"
+          :disabled="isDeletingItem || isUpdating"
+        >
+          {{ isDeletingItem ? 'Deleting...' : 'Delete Item' }}
+        </button>
       </div>
     </form>
 
@@ -231,8 +276,20 @@ function closeConfirmModal() {
           <p>{{ confirmMessage }}</p>
         </div>
         <div class="modal-actions">
-          <button @click="confirmDelete" class="btn-confirm">Confirm</button>
-          <button @click="closeConfirmModal" class="btn-cancel">Cancel</button>
+          <button 
+            @click="confirmDelete" 
+            class="btn-confirm"
+            :disabled="isConfirming"
+          >
+            {{ isConfirming ? 'Processing...' : 'Confirm' }}
+          </button>
+          <button 
+            @click="closeConfirmModal" 
+            class="btn-cancel"
+            :disabled="isConfirming"
+          >
+            Cancel
+          </button>
         </div>
       </div>
     </div>

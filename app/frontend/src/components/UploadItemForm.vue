@@ -12,6 +12,7 @@ const price = ref('');
 const type = ref('');
 const productTypes = ref([]);
 const isLoadingTypes = ref(false);
+const isSubmitting = ref(false);
 
 const router = useRouter();
 
@@ -31,50 +32,53 @@ async function fetchProductTypes() {
 onMounted(fetchProductTypes);
 
 async function handleSubmit() {
-    submitButton.disabled = true;
-
+    if (isSubmitting.value) return;
+    
     if (!validatePrice()) {
-    submitButton.disabled = false;
-    return;
-  }
+        return;
+    }
 
-  const formData = new FormData();
-  formData.append('title', title.value);
-  formData.append('description', description.value);
-  formData.append('price', price.value);
-  formData.append('type', type.value);
+    try {
+        isSubmitting.value = true;
+        const formData = new FormData();
+        formData.append('title', title.value);
+        formData.append('description', description.value);
+        formData.append('price', price.value);
+        formData.append('type', type.value);
 
-  if (images.value && images.value.length > 0) {
-    images.value.forEach((image) => {
-      formData.append('images[]', image);
-    });
-  }
+        if (images.value && images.value.length > 0) {
+            images.value.forEach((image) => {
+                formData.append('images[]', image);
+            });
+        }
 
-  await postItem(formData);
+        await postItem(formData);
+    } finally {
+        isSubmitting.value = false;
+    }
 }
 
 async function postItem(data) {
     try {
         const response = await axios.post('/items', data, {
-        headers: {
-            'Content-Type': 'multipart/form-data'
-        }
-    });
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
 
         if (response.status === 200) {
             title.value = '';
             images.value = null;
+            imagePreviews.value = [];
             description.value = '';
             price.value = '';
             type.value = '';
-            submitButton.disabled = false;
 
             router.push('/my-items');
         }
     } catch (error) {
         console.error('Failed to publish item:', error);
-        submitButton.disabled = false;
-        // You can add a nicer error display here if needed
+        alert('Failed to publish item. Please try again.');
     }
 }
 
@@ -215,9 +219,13 @@ function validatePrice() {
                 </div>
             </div>
 
-            <button id="submitButton" type="submit" class="btn-submit">
-                <span class="btn-icon">📤</span>
-                <span>Publish Item</span>
+            <button 
+                type="submit" 
+                class="btn-submit"
+                :disabled="isSubmitting"
+            >
+                <span class="btn-icon">{{ isSubmitting ? '⏳' : '📤' }}</span>
+                <span>{{ isSubmitting ? 'Publishing...' : 'Publish Item' }}</span>
             </button>
         </form>
     </div>

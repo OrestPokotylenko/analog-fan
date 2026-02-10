@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import { isTokenExpired, clearAuthState } from '../services/authHelpers';
 
 const routes = [
   { path: '/', component: () => import('../views/Home.vue') },
@@ -12,6 +13,9 @@ const routes = [
   { path: '/my-items/upload', component: () => import('../views/UploadItem.vue') },
   { path: '/my-items/:id', component: () => import('../views/EditItem.vue') },
   { path: '/cart', component: () => import('../views/ShoppingCart.vue') },
+  { path: '/checkout', component: () => import('../views/Checkout.vue') },
+  { path: '/orders', component: () => import('../views/Orders.vue') },
+  { path: '/orders/:id', component: () => import('../views/OrderDetails.vue') },
   { path: '/profile', component: () => import('../views/Profile.vue') },
   { path: '/wishlist', component: () => import('../views/Wishlist.vue') },
   { path: '/admin', component: () => import('../views/Admin.vue') }
@@ -24,11 +28,34 @@ const router = createRouter({
 
 // Navigation guard to redirect admins and handle admin routes
 router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('jwtToken');
   const user = JSON.parse(localStorage.getItem('user') || 'null');
   
-  // If user is admin and trying to access non-admin pages
-  if (user && user.role === 'admin' && to.path !== '/admin' && to.path !== '/login') {
-    next('/admin');
+  // Check if token is expired and clear auth state immediately
+  if (token && isTokenExpired(token)) {
+    clearAuthState();
+    if (to.path !== '/login' && to.path !== '/signup' && to.path !== '/reset-password' && to.path !== '/') {
+      return next('/login');
+    }
+  }
+  
+  // Protected routes that require login
+  const protectedRoutes = ['/profile', '/cart', '/checkout', '/orders', '/my-items', '/wishlist', '/admin'];
+  const isProtectedRoute = protectedRoutes.some(route => to.path.startsWith(route));
+  
+  if (isProtectedRoute && (!token || isTokenExpired(token))) {
+    return next('/login');
+  }
+  
+  // If user is admin
+  if (user && user.role === 'admin') {
+    // Allow admin panel, login, and order details viewing
+    if (to.path === '/admin' || to.path === '/login' || to.path.match(/^\/orders\/\d+$/)) {
+      next();
+    } else {
+      // Redirect to admin panel for all other pages
+      next('/admin');
+    }
   }
   // If non-admin trying to access admin page
   else if (to.path === '/admin' && (!user || user.role !== 'admin')) {

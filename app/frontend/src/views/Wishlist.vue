@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import axios from '../services/axiosConfig';
 import Header from '../components/Header.vue';
 import ItemCard from '../components/ItemCard.vue';
+import { isTokenExpired, clearAuthState } from '../services/authHelpers';
 
 const router = useRouter();
 const $auth = inject('$auth');
@@ -14,6 +15,14 @@ const isLoading = ref(true);
 const errorMessage = ref('');
 
 onMounted(async () => {
+  // Check token expiration immediately
+  const token = localStorage.getItem('jwtToken');
+  if (!token || isTokenExpired(token)) {
+    clearAuthState($auth);
+    router.push('/login');
+    return;
+  }
+  
   if (!$auth.isLoggedIn) {
     router.push('/login');
     return;

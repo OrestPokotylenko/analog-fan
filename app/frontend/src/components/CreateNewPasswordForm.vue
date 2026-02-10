@@ -31,7 +31,9 @@
           />
         </div>
 
-        <button type="submit" class="btn-reset" :disabled="isSubmitting">Reset Password</button>
+        <button type="submit" class="btn-reset" :disabled="isSubmitting">
+          {{ isSubmitting ? 'Resetting Password...' : 'Reset Password' }}
+        </button>
       </form>
 
       <div v-if="errorMessage" class="error-message">

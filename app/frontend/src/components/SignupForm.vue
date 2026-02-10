@@ -38,7 +38,9 @@
           <input type="password" id="repeatPassword" v-model="repeatPassword" class="form-input" placeholder="Confirm password" required />
         </div>
 
-        <button type="submit" class="btn-signup">Create Account</button>
+        <button type="submit" class="btn-signup" :disabled="isSigningUp">
+          {{ isSigningUp ? 'Creating Account...' : 'Create Account' }}
+        </button>
       </form>
 
       <div v-if="errorMessage" class="error-message">
@@ -67,17 +69,21 @@ export default {
       password: '',
       repeatPassword: '',
       errorMessage: '',
-
+      isSigningUp: false
     };
   },
   methods: {
     async signup() {
+      if (this.isSigningUp) return;
+      
       if (this.password !== this.repeatPassword) {
         this.errorMessage = 'Passwords do not match.';
         return;
       }
 
       try {
+        this.isSigningUp = true;
+        this.errorMessage = '';
         const response = await this.registerUser();
         if (response.data.success) {
           await this.authenticateUser();
@@ -87,6 +93,8 @@ export default {
         }
       } catch (error) {
         this.errorMessage = 'Error during registration. Please try again.';
+      } finally {
+        this.isSigningUp = false;
       }
     },
     async registerUser() {

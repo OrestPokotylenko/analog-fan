@@ -47,7 +47,7 @@ class ProductTypeController {
         $imageUrl = null;
         
         // Handle image upload if provided
-        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+        if (isset($_FILES['image']) && file_exists($_FILES['image']['tmp_name'])) {
             // Get existing product type to delete old image if exists
             $existingType = $this->model->fetchProductTypeById($productTypeId);
             if ($existingType && $existingType['image_url']) {

@@ -14,10 +14,15 @@ const $auth = inject('$auth', {
 const username = ref('');
 const password = ref('');
 const errorMessage = ref('');
+const isLoggingIn = ref(false);
 
 // Methods
 async function handleLogin() {
+  if (isLoggingIn.value) return;
+  
   try {
+    isLoggingIn.value = true;
+    errorMessage.value = '';
     const response = await axios.get('/authenticate', {
       params: {
         username: username.value,
@@ -41,6 +46,8 @@ async function handleLogin() {
     }
   } catch (error) {
     errorMessage.value = 'An error occurred during login. Please try again.';
+  } finally {
+    isLoggingIn.value = false;
   }
 }
 </script>
@@ -78,7 +85,9 @@ async function handleLogin() {
           />
         </div>
 
-        <button type="submit" class="btn-login">Sign In</button>
+        <button type="submit" class="btn-login" :disabled="isLoggingIn">
+          {{ isLoggingIn ? 'Signing In...' : 'Sign In' }}
+        </button>
       </form>
 
       <div v-if="errorMessage" class="error-message">

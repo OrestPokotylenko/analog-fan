@@ -8,8 +8,13 @@
             <h1>Shopping Cart</h1>
             <p v-if="cartItems.length">{{ cartItems.length }} {{ cartItems.length === 1 ? 'item' : 'items' }} in your cart</p>
           </div>
-          <button v-if="cartItems.length" @click="clearCart" class="btn-clear-cart">
-            Clear Cart
+          <button 
+            v-if="cartItems.length" 
+            @click="clearCart" 
+            class="btn-clear-cart"
+            :disabled="isClearing || isRemoving"
+          >
+            {{ isClearing ? 'Clearing...' : 'Clear Cart' }}
           </button>
         </div>
       </div>
@@ -33,8 +38,12 @@
               <p class="item-quantity">Quantity: {{ item.quantity }}</p>
               <p class="item-price">€{{ item.price.toFixed(2) }}</p>
             </div>
-            <button @click="removeFromCart(item.id)" class="btn-remove">
-              <span>🗑️</span>
+            <button 
+              @click="removeFromCart(item.id)" 
+              class="btn-remove"
+              :disabled="isRemoving"
+            >
+              <span>{{ isRemoving ? '⏳' : '🗑️' }}</span>
             </button>
           </div>
         </div>
@@ -86,8 +95,20 @@
           <h3>Clear Cart?</h3>
           <p>Are you sure you want to remove all items from your cart?</p>
           <div class="dialog-actions">
-            <button @click="cancelClearCart" class="btn btn-secondary">Cancel</button>
-            <button @click="confirmClearCart" class="btn btn-danger">Clear Cart</button>
+            <button 
+              @click="cancelClearCart" 
+              class="btn btn-secondary"
+              :disabled="isClearing"
+            >
+              Cancel
+            </button>
+            <button 
+              @click="confirmClearCart" 
+              class="btn btn-danger"
+              :disabled="isClearing"
+            >
+              {{ isClearing ? 'Clearing...' : 'Clear Cart' }}
+            </button>
           </div>
         </div>
       </div>
@@ -96,20 +117,31 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import CartService from '../services/CartService';
 import Header from '../components/Header.vue';
+import { isTokenExpired, clearAuthState } from '../services/authHelpers';
 
 const router = useRouter();
+const $auth = inject('$auth');
 const cartItems = ref([]);
 const shipping = ref(5.99);
 const userCart = ref(null);
 const showNotification = ref(false);
 const notificationMessage = ref('');
 const showConfirmDialog = ref(false);
+const isRemoving = ref(false);
+const isClearing = ref(false);
 
 onMounted(() => {
+  // Check token expiration immediately
+  const token = localStorage.getItem('jwtToken');
+  if (!token || isTokenExpired(token)) {
+    clearAuthState($auth);
+    router.push('/login');
+    return;
+  }
   loadCart();
 });
 
@@ -130,14 +162,19 @@ async function loadCart() {
 }
 
 async function removeFromCart(cartItemId) {
-  if (!userCart.value) return;
+  if (!userCart.value || isRemoving.value) return;
   
-  const success = await CartService.removeItem(userCart.value.cartId, cartItemId);
-  if (success) {
-    await loadCart();
-    showToast('Item removed from cart');
-  } else {
-    showToast('Failed to remove item');
+  try {
+    isRemoving.value = true;
+    const success = await CartService.removeItem(userCart.value.cartId, cartItemId);
+    if (success) {
+      await loadCart();
+      showToast('Item removed from cart');
+    } else {
+      showToast('Failed to remove item');
+    }
+  } finally {
+    isRemoving.value = false;
   }
 }
 
@@ -155,13 +192,20 @@ async function clearCart() {
 }
 
 async function confirmClearCart() {
-  showConfirmDialog.value = false;
-  const success = await CartService.clearCart(userCart.value.cartId);
-  if (success) {
-    cartItems.value = [];
-    showToast('Cart cleared successfully');
-  } else {
-    showToast('Failed to clear cart');
+  if (isClearing.value) return;
+  
+  try {
+    isClearing.value = true;
+    showConfirmDialog.value = false;
+    const success = await CartService.clearCart(userCart.value.cartId);
+    if (success) {
+      cartItems.value = [];
+      showToast('Cart cleared successfully');
+    } else {
+      showToast('Failed to clear cart');
+    }
+  } finally {
+    isClearing.value = false;
   }
 }
 
@@ -170,7 +214,7 @@ function cancelClearCart() {
 }
 
 function proceedToCheckout() {
-  showToast('Checkout functionality coming soon!');
+  router.push('/checkout');
 }
 
 const subtotal = computed(() => {

@@ -19,7 +19,13 @@
           />
         </div>
 
-        <button type="submit" id="resetButton" class="btn-reset">Send Reset Link</button>
+        <button 
+          type="submit" 
+          class="btn-reset"
+          :disabled="isSubmitting"
+        >
+          {{ isSubmitting ? 'Sending...' : 'Send Reset Link' }}
+        </button>
       </form>
 
       <div v-if="errorMessage" :class="['message', { 'error': !success, 'success': success }]">
@@ -43,15 +49,17 @@ export default {
     return {
       email: '',
       errorMessage: '',
-      success: false
+      success: false,
+      isSubmitting: false
     };
   },
   methods: {
     async resetPassword() {
-      const resetButton = document.getElementById('resetButton');
-      if (resetButton) resetButton.disabled = true;
-
+      if (this.isSubmitting) return;
+      
       try {
+        this.isSubmitting = true;
+        this.errorMessage = '';
         const response = await axios.get('/reset-password', {
           params: {
             email: this.email
@@ -70,9 +78,9 @@ export default {
       } catch (error) {
         this.errorMessage = "An error occurred. Please try again.";
       } finally {
-        if (resetButton) resetButton.disabled = false;
+        this.isSubmitting = false;
       }
-      }
+    }
     }
   };
 </script>

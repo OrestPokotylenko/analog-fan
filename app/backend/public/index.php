@@ -22,5 +22,7 @@ require_once(__DIR__ . '/../routes/item-api.php');
 require_once(__DIR__ . '/../routes/liked-items-api.php');
 require_once(__DIR__ . '/../routes/product-type-api.php');
 require_once(__DIR__ . '/../routes/shopping-cart-api.php');
+require_once(__DIR__ . '/../routes/order-api.php');
+require_once(__DIR__ . '/../routes/order-item-api.php');
 
 Route::run();

@@ -184,12 +184,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from '../services/axiosConfig';
 import Header from '../components/Header.vue';
+import { isTokenExpired, clearAuthState } from '../services/authHelpers';
 
 const router = useRouter();
+const $auth = inject('$auth');
 const user = ref({});
 const editForm = ref({});
 const isLoading = ref(true);
@@ -202,6 +204,13 @@ const photoPreview = ref(null);
 const selectedFile = ref(null);
 
 onMounted(async () => {
+  // Check token expiration immediately
+  const token = localStorage.getItem('jwtToken');
+  if (!token || isTokenExpired(token)) {
+    clearAuthState($auth);
+    router.push('/login');
+    return;
+  }
   await loadProfile();
 });
 

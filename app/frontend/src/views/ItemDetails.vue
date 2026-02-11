@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import axios from '../services/axiosConfig';
 import CartService from '../services/CartService';
 import Header from '../components/Header.vue';
+import LoginPrompt from '../components/LoginPrompt.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -17,6 +18,9 @@ const selectedImageIndex = ref(0);
 const showNotification = ref(false);
 const notificationMessage = ref('');
 const addedToCart = ref(false);
+const showLoginPrompt = ref(false);
+const isLiking = ref(false);
+const isAddingToCart = ref(false);
 
 onMounted(async () => {
   await fetchItem();
@@ -81,13 +85,16 @@ async function fetchCart() {
 }
 
 async function toggleLike() {
+  if (isLiking.value) return;
+  
   const user = JSON.parse(localStorage.getItem('user'));
   if (!user || !user.userId) {
-    router.push('/login');
+    showLoginPrompt.value = true;
     return;
   }
 
   try {
+    isLiking.value = true;
     if (isLiked.value) {
       await axios.delete('/liked-items', {
         data: {
@@ -104,6 +111,8 @@ async function toggleLike() {
     isLiked.value = !isLiked.value;
   } catch (error) {
     console.error('Failed to toggle like:', error);
+  } finally {
+    isLiking.value = false;
   }
 }
 
@@ -116,6 +125,8 @@ function showToast(message, duration = 3000) {
 }
 
 async function addToCart() {
+  if (isAddingToCart.value) return;
+  
   const user = JSON.parse(localStorage.getItem('user'));
   if (!user || !user.userId) {
     router.push('/login');
@@ -133,36 +144,45 @@ async function addToCart() {
     return;
   }
 
-  // Optimistic update - show immediately
-  addedToCart.value = true;
-  showToast('✓ Added to cart!');
-  
-  // Add to local cart items immediately (optimistic)
-  cartItems.value.push({
-    itemId: item.value.itemId,
-    title: item.value.title,
-    price: item.value.price,
-    quantity: 1,
-    images: item.value.images
-  });
-  
-  // Add to backend in background
-  CartService.addItem(
-    user.userId,
-    item.value.itemId,
-    1
-  ).then((success) => {
+  try {
+    isAddingToCart.value = true;
+    // Optimistic update - show immediately
+    addedToCart.value = true;
+    showToast('✓ Added to cart!');
+    
+    // Add to local cart items immediately (optimistic)
+    cartItems.value.push({
+      itemId: item.value.itemId,
+      title: item.value.title,
+      price: item.value.price,
+      quantity: 1,
+      images: item.value.images
+    });
+    
+    // Add to backend
+    const success = await CartService.addItem(
+      user.userId,
+      item.value.itemId,
+      1
+    );
+    
     if (!success) {
       showToast('Failed to sync with server');
       addedToCart.value = false;
       // Remove from local cart if backend failed
       cartItems.value = cartItems.value.filter(ci => ci.itemId !== item.value.itemId);
     }
-  });
-  
-  setTimeout(() => {
+  } catch (error) {
+    console.error('Failed to add to cart:', error);
+    showToast('Failed to add to cart');
     addedToCart.value = false;
-  }, 2000);
+    cartItems.value = cartItems.value.filter(ci => ci.itemId !== item.value.itemId);
+  } finally {
+    isAddingToCart.value = false;
+    setTimeout(() => {
+      addedToCart.value = false;
+    }, 2000);
+  }
 }
 
 function buyNow() {
@@ -297,8 +317,9 @@ onUnmounted(() => {
             :class="{ liked: isLiked }"
             @click="toggleLike"
             :title="isLiked ? 'Remove from wishlist' : 'Add to wishlist'"
+            :disabled="isLiking"
           >
-            ❤️
+            {{ isLiking ? '⏳' : '❤️' }}
           </button>
         </div>
 
@@ -313,8 +334,9 @@ onUnmounted(() => {
               class="btn btn-primary" 
               :class="{ 'btn-added': addedToCart }"
               @click="addToCart"
+              :disabled="isAddingToCart || addedToCart"
             >
-              {{ addedToCart ? '✓ Added!' : 'Add to Cart' }}
+              {{ addedToCart ? '✓ Added!' : (isAddingToCart ? 'Adding...' : 'Add to Cart') }}
             </button>
             <button class="btn btn-accent" @click="buyNow">
               Buy Now
@@ -339,6 +361,12 @@ onUnmounted(() => {
       </div>
     </div>
   </div>
+
+  <LoginPrompt
+    :show="showLoginPrompt"
+    @close="showLoginPrompt = false"
+    @login="router.push('/login')"
+  />
 </template>
 
 <style scoped>

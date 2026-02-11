@@ -2,6 +2,8 @@
 import { ref, onMounted, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from '../services/axiosConfig';
+import OrderService from '../services/OrderService';
+import { isTokenExpired, clearAuthState } from '../services/authHelpers';
 
 const router = useRouter();
 const $auth = inject('$auth');
@@ -9,10 +11,12 @@ const $auth = inject('$auth');
 const users = ref([]);
 const items = ref([]);
 const productTypes = ref([]);
+const orders = ref([]);
 const stats = ref({
   totalUsers: 0,
   totalItems: 0,
-  totalProductTypes: 0
+  totalProductTypes: 0,
+  totalOrders: 0
 });
 const isLoading = ref(true);
 const activeTab = ref('dashboard');
@@ -28,8 +32,51 @@ const confirmTitle = ref('');
 const showErrorModal = ref(false);
 const errorMessage = ref('');
 const errorTitle = ref('');
+const isSavingType = ref(false);
+const isDeletingUser = ref(false);
+const isDeletingItem = ref(false);
+const isDeletingType = ref(false);
+const isConfirming = ref(false);
+
+const statusColors = {
+  pending: '#f59e0b',
+  processing: '#3b82f6',
+  shipped: '#8b5cf6',
+  delivered: '#10b981',
+  cancelled: '#ef4444'
+};
+
+const paymentStatusColors = {
+  pending: '#f59e0b',
+  paid: '#10b981',
+  failed: '#ef4444',
+  refunded: '#6b7280'
+};
+
+const statusDescriptions = {
+  pending: '⏳ Awaiting Processing',
+  processing: '⚙️ Order Being Prepared',
+  shipped: '🚚 On The Way',
+  delivered: '✅ Successfully Delivered',
+  cancelled: '❌ Order Cancelled'
+};
+
+const paymentStatusDescriptions = {
+  pending: '⏳ Payment Pending',
+  paid: '✅ Payment Received',
+  failed: '❌ Payment Failed',
+  refunded: '↩️ Payment Refunded'
+};
 
 onMounted(async () => {
+  // Check token expiration immediately
+  const token = localStorage.getItem('jwtToken');
+  if (!token || isTokenExpired(token)) {
+    clearAuthState($auth);
+    router.push('/login');
+    return;
+  }
+  
   // Check if user is admin
   if (!$auth.user || $auth.user.role !== 'admin') {
     router.push('/');
@@ -55,11 +102,16 @@ async function loadData() {
     const typesResponse = await axios.get('/product-types');
     productTypes.value = typesResponse.data;
     
+    // Load orders
+    const ordersResponse = await OrderService.getAllOrders();
+    orders.value = ordersResponse.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
     // Calculate stats
     stats.value = {
       totalUsers: users.value.length,
       totalItems: items.value.length,
-      totalProductTypes: productTypes.value.length
+      totalProductTypes: productTypes.value.length,
+      totalOrders: orders.value.length
     };
   } catch (error) {
     console.error('Failed to load admin data:', error);
@@ -69,40 +121,50 @@ async function loadData() {
 }
 
 async function deleteUser(userId) {
+  if (isDeletingUser.value) return;
   confirmTitle.value = 'Delete User';
   confirmMessage.value = 'Are you sure you want to delete this user and all their items? This action cannot be undone.';
   confirmAction.value = async () => {
     try {
+      isDeletingUser.value = true;
       await axios.delete(`/users/${userId}`);
       await loadData();
     } catch (error) {
       console.error('Failed to delete user:', error);
       alert('Failed to delete user');
+    } finally {
+      isDeletingUser.value = false;
     }
   };
   showConfirmModal.value = true;
 }
 
 async function deleteItem(itemId) {
+  if (isDeletingItem.value) return;
   confirmTitle.value = 'Delete Item';
   confirmMessage.value = 'Are you sure you want to delete this item? This action cannot be undone.';
   confirmAction.value = async () => {
     try {
+      isDeletingItem.value = true;
       await axios.delete(`/items/${itemId}`);
       await loadData();
     } catch (error) {
       console.error('Failed to delete item:', error);
       alert('Failed to delete item');
+    } finally {
+      isDeletingItem.value = false;
     }
   };
   showConfirmModal.value = true;
 }
 
 async function deleteProductType(typeId) {
+  if (isDeletingType.value) return;
   confirmTitle.value = 'Delete Product Type';
   confirmMessage.value = 'Are you sure you want to delete this product type? This action cannot be undone.';
   confirmAction.value = async () => {
     try {
+      isDeletingType.value = true;
       const response = await axios.delete(`/product-types/${typeId}`);
       
       // Check if it's a conflict error (foreign key constraint)
@@ -117,16 +179,22 @@ async function deleteProductType(typeId) {
       errorTitle.value = 'Delete Failed';
       errorMessage.value = 'An unexpected error occurred while trying to delete the product type. Please try again.';
       showErrorModal.value = true;
+    } finally {
+      isDeletingType.value = false;
     }
   };
   showConfirmModal.value = true;
 }
 
 async function confirmDelete() {
-  if (confirmAction.value) {
+  if (isConfirming.value || !confirmAction.value) return;
+  try {
+    isConfirming.value = true;
     await confirmAction.value();
+  } finally {
+    isConfirming.value = false;
+    closeConfirmModal();
   }
-  closeConfirmModal();
 }
 
 function closeConfirmModal() {
@@ -184,7 +252,10 @@ async function saveProductType() {
     return;
   }
 
+  if (isSavingType.value) return;
+
   try {
+    isSavingType.value = true;
     const formData = new FormData();
     formData.append('name', typeFormName.value);
     
@@ -193,7 +264,7 @@ async function saveProductType() {
     }
 
     if (editingType.value) {
-      // Update existing type
+      // Update existing type - use FormData to support image updates
       await axios.put(`/product-types/${editingType.value.productTypeId}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
@@ -212,7 +283,53 @@ async function saveProductType() {
   } catch (error) {
     console.error('Failed to save product type:', error);
     alert('Failed to save product type');
+  } finally {
+    isSavingType.value = false;
   }
+}
+
+function formatDateShort(dateString) {
+  if (!dateString) return 'N/A';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric'
+  });
+}
+
+function viewOrderDetailsAdmin(orderId) {
+  router.push(`/orders/${orderId}`);
+}
+
+async function cancelOrder(order) {
+  confirmTitle.value = 'Cancel Order';
+  confirmMessage.value = `Are you sure you want to cancel order #${order.orderNumber}? This action cannot be undone.`;
+  confirmAction.value = async () => {
+    try {
+      await OrderService.cancelOrder(order.id);
+      await loadData();
+    } catch (error) {
+      console.error('Failed to cancel order:', error);
+      alert('Failed to cancel order');
+    }
+  };
+  showConfirmModal.value = true;
+}
+
+async function refundOrder(order) {
+  confirmTitle.value = 'Refund Order';
+  confirmMessage.value = `Are you sure you want to refund order #${order.orderNumber}? The payment status will be changed to refunded.`;
+  confirmAction.value = async () => {
+    try {
+      await OrderService.refundOrder(order.id);
+      await loadData();
+    } catch (error) {
+      console.error('Failed to refund order:', error);
+      alert('Failed to refund order');
+    }
+  };
+  showConfirmModal.value = true;
 }
 
 function logout() {
@@ -258,6 +375,12 @@ function logout() {
           Items ({{ items.length }})
         </button>
         <button 
+          :class="['tab', { active: activeTab === 'orders' }]" 
+          @click="activeTab = 'orders'"
+        >
+          Orders ({{ orders.length }})
+        </button>
+        <button 
           :class="['tab', { active: activeTab === 'types' }]" 
           @click="activeTab = 'types'"
         >
@@ -268,21 +391,28 @@ function logout() {
       <!-- Dashboard Tab -->
       <div v-if="activeTab === 'dashboard'" class="tab-content">
         <div class="stats-grid">
-          <div class="stat-card">
+          <div class="stat-card" @click="activeTab = 'users'">
             <div class="stat-icon">👥</div>
             <div class="stat-info">
               <h3>Total Users</h3>
               <p class="stat-number">{{ stats.totalUsers }}</p>
             </div>
           </div>
-          <div class="stat-card">
+          <div class="stat-card" @click="activeTab = 'items'">
             <div class="stat-icon">📦</div>
             <div class="stat-info">
               <h3>Total Items</h3>
               <p class="stat-number">{{ stats.totalItems }}</p>
             </div>
           </div>
-          <div class="stat-card">
+          <div class="stat-card" @click="activeTab = 'orders'">
+            <div class="stat-icon">🛒</div>
+            <div class="stat-info">
+              <h3>Total Orders</h3>
+              <p class="stat-number">{{ stats.totalOrders }}</p>
+            </div>
+          </div>
+          <div class="stat-card" @click="activeTab = 'types'">
             <div class="stat-icon">🏷️</div>
             <div class="stat-info">
               <h3>Product Types</h3>
@@ -322,8 +452,9 @@ function logout() {
                     v-if="user.role !== 'admin'"
                     @click="deleteUser(user.userId)" 
                     class="btn-delete"
+                    :disabled="isDeletingUser"
                   >
-                    Delete
+                    {{ isDeletingUser ? 'Deleting...' : 'Delete' }}
                   </button>
                 </td>
               </tr>
@@ -354,8 +485,74 @@ function logout() {
                 <td>{{ item.type }}</td>
                 <td>User #{{ item.userId }}</td>
                 <td>
-                  <button @click="deleteItem(item.itemId)" class="btn-delete">
-                    Delete
+                  <button 
+                    @click="deleteItem(item.itemId)" 
+                    class="btn-delete"
+                    :disabled="isDeletingItem"
+                  >
+                    {{ isDeletingItem ? 'Deleting...' : 'Delete' }}
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Orders Tab -->
+      <div v-if="activeTab === 'orders'" class="tab-content">
+        <div class="table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Order #</th>
+                <th>User Email</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Payment</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="order in orders" :key="order.id">
+                <td><strong>{{ order.orderNumber }}</strong></td>
+                <td>{{ order.email }}</td>
+                <td>€{{ parseFloat(order.totalAmount).toFixed(2) }}</td>
+                <td>
+                  <span 
+                    class="status-badge-table" 
+                    :style="{ backgroundColor: statusColors[order.status] }"
+                  >
+                    {{ statusDescriptions[order.status] }}
+                  </span>
+                </td>
+                <td>
+                  <span 
+                    class="status-badge-table" 
+                    :style="{ backgroundColor: paymentStatusColors[order.paymentStatus] }"
+                  >
+                    {{ paymentStatusDescriptions[order.paymentStatus] }}
+                  </span>
+                </td>
+                <td>{{ formatDateShort(order.createdAt) }}</td>
+                <td>
+                  <button @click="viewOrderDetailsAdmin(order.id)" class="btn-view">
+                    View
+                  </button>
+                  <button 
+                    v-if="order.status !== 'cancelled' && order.status !== 'delivered'" 
+                    @click="cancelOrder(order)" 
+                    class="btn-cancel"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    v-if="order.paymentStatus === 'paid' && order.paymentStatus !== 'refunded'" 
+                    @click="refundOrder(order)" 
+                    class="btn-refund"
+                  >
+                    Refund
                   </button>
                 </td>
               </tr>
@@ -396,11 +593,19 @@ function logout() {
                 </td>
                 <td>{{ type.typeName }}</td>
                 <td>
-                  <button @click="openEditTypeModal(type)" class="btn-edit">
+                  <button 
+                    @click="openEditTypeModal(type)" 
+                    class="btn-edit"
+                    :disabled="isSavingType || isDeletingType"
+                  >
                     Edit
                   </button>
-                  <button @click="deleteProductType(type.productTypeId)" class="btn-delete">
-                    Delete
+                  <button 
+                    @click="deleteProductType(type.productTypeId)" 
+                    class="btn-delete"
+                    :disabled="isDeletingType"
+                  >
+                    {{ isDeletingType ? 'Deleting...' : 'Delete' }}
                   </button>
                 </td>
               </tr>
@@ -441,9 +646,19 @@ function logout() {
           </div>
         </div>
         <div class="modal-footer">
-          <button @click="closeTypeModal" class="btn-secondary">Cancel</button>
-          <button @click="saveProductType" class="btn-primary">
-            {{ editingType ? 'Update' : 'Create' }}
+          <button 
+            @click="closeTypeModal" 
+            class="btn-secondary"
+            :disabled="isSavingType"
+          >
+            Cancel
+          </button>
+          <button 
+            @click="saveProductType" 
+            class="btn-primary"
+            :disabled="isSavingType"
+          >
+            {{ isSavingType ? 'Saving...' : (editingType ? 'Update' : 'Create') }}
           </button>
         </div>
       </div>
@@ -461,9 +676,19 @@ function logout() {
           <p class="confirm-message">{{ confirmMessage }}</p>
         </div>
         <div class="modal-footer">
-          <button @click="closeConfirmModal" class="btn-secondary">Cancel</button>
-          <button @click="confirmDelete" class="btn-danger">
-            Delete
+          <button 
+            @click="closeConfirmModal" 
+            class="btn-secondary"
+            :disabled="isConfirming"
+          >
+            Cancel
+          </button>
+          <button 
+            @click="confirmDelete" 
+            class="btn-danger"
+            :disabled="isConfirming"
+          >
+            {{ isConfirming ? 'Processing...' : 'Confirm' }}
           </button>
         </div>
       </div>
@@ -927,6 +1152,93 @@ function logout() {
   line-height: 1.6;
   color: #e0e0e0;
   margin: 0;
+}
+
+.status-badge-table {
+  padding: 5px 12px;
+  border-radius: 15px;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: bold;
+  letter-spacing: 0.3px;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.btn-view {
+  padding: 8px 16px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s;
+  margin-left: 5px;
+}
+
+.btn-view:hover {
+  background: #5568d3;
+  transform: scale(1.05);
+}
+
+.order-info-display {
+  margin-top: 20px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.order-info-display h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #667eea;
+  font-size: 1rem;
+}
+
+.order-info-display p {
+  margin: 8px 0;
+  color: #e0e0e0;
+  line-height: 1.6;
+}
+
+.stat-card {
+  cursor: pointer;
+}
+
+.btn-cancel {
+  padding: 8px 16px;
+  background: #f59e0b;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s;
+  margin-left: 5px;
+}
+
+.btn-cancel:hover {
+  background: #d97706;
+  transform: scale(1.05);
+}
+
+.btn-refund {
+  padding: 8px 16px;
+  background: #8b5cf6;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s;
+  margin-left: 5px;
+}
+
+.btn-refund:hover {
+  background: #7c3aed;
+  transform: scale(1.05);
 }
 
 @media (max-width: 768px) {

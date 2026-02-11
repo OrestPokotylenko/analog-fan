@@ -1,8 +1,12 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import likeFilled from '../assets/like-filled.svg';
 import likeUnfilled from '../assets/like-unfilled.svg';
 import axios from '../services/axiosConfig';
+import LoginPrompt from './LoginPrompt.vue';
+
+const router = useRouter();
 
 const props = defineProps({
   item: {
@@ -16,11 +20,12 @@ const props = defineProps({
 });
 
 const isLiked = computed(() => props.likedItems.includes(props.item.itemId));
+const showLoginPrompt = ref(false);
 
 async function likeItem() {
   const user = JSON.parse(localStorage.getItem('user'));
   if (!user || !user.userId) {
-    console.error('User not found in localStorage or userId is missing');
+    showLoginPrompt.value = true;
     return;
   }
 
@@ -60,33 +65,41 @@ async function deleteLikedItem(userId) {
 </script>
 
 <template>
-  <RouterLink :to="`/item/${item.itemId}`" class="card-link">
-    <div class="card">
-      <div class="card-image-container">
-      <img
-        v-if="item.imagesPath?.[0]"
-        :src="item.imagesPath[0]"
-        class="card-image"
-        :alt="item.title"
-      />
-      <div v-else class="card-image-placeholder">No Image</div>
-      <button class="like-btn" @click.prevent.stop="likeItem">
-        <img :src="isLiked ? likeFilled : likeUnfilled" class="like-icon" />
-      </button>
-      </div>
+  <div>
+    <RouterLink :to="`/item/${item.itemId}`" class="card-link">
+      <div class="card">
+        <div class="card-image-container">
+        <img
+          v-if="item.imagesPath?.[0]"
+          :src="item.imagesPath[0]"
+          class="card-image"
+          :alt="item.title"
+        />
+        <div v-else class="card-image-placeholder">No Image</div>
+        <button class="like-btn" @click.prevent.stop="likeItem">
+          <img :src="isLiked ? likeFilled : likeUnfilled" class="like-icon" />
+        </button>
+        </div>
 
-      <div class="card-body">
-        <h3 class="card-title">{{ item.title }}</h3>
-        
-        <p class="card-type">{{ item.type }}</p>
-        <p class="card-description">{{ item.description }}</p>
-        
-        <div class="card-footer">
-          <span class="card-price">€{{ item.price.toFixed(2) }}</span>
+        <div class="card-body">
+          <h3 class="card-title">{{ item.title }}</h3>
+          
+          <p class="card-type">{{ item.type }}</p>
+          <p class="card-description">{{ item.description }}</p>
+          
+          <div class="card-footer">
+            <span class="card-price">€{{ item.price.toFixed(2) }}</span>
+          </div>
         </div>
       </div>
-    </div>
-  </RouterLink>
+    </RouterLink>
+
+    <LoginPrompt
+      :show="showLoginPrompt"
+      @close="showLoginPrompt = false"
+      @login="router.push('/login')"
+    />
+  </div>
 </template>
 
 <style scoped>

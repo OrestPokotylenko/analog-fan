@@ -63,6 +63,7 @@ async function updateItem() {
     formData.append('description', String(item.value.description ?? ''));
     formData.append('price', String(item.value.price ?? 0));
     formData.append('type', String(item.value.productTypeId ?? ''));
+    formData.append('quantity', String(item.value.quantity ?? 1));
 
     if (item.value.imagesPath && item.value.imagesPath.length > 0) {
       item.value.imagesPath.forEach((img) => {
@@ -217,7 +218,7 @@ function closeConfirmModal() {
       <!-- Description -->
       <div class="form-group">
         <label class="form-label">Description</label>
-        <textarea v-model="item.description" class="form-textarea" rows="5" required></textarea>
+        <textarea v-model="item.description" class="form-textarea" rows="5"></textarea>
       </div>
 
       <!-- Price -->
@@ -226,13 +227,19 @@ function closeConfirmModal() {
         <input v-model="item.price" type="text" step="0.01" min="0" class="form-input" required />
       </div>
 
+      <!-- Quantity -->
+      <div class="form-group">
+        <label class="form-label">Quantity Available</label>
+        <input v-model="item.quantity" type="number" min="1" class="form-input" required />
+      </div>
+
       <!-- Type -->
       <div class="form-group">
         <label class="form-label">Product Type</label>
         <select v-model="item.productTypeId" class="form-select" :disabled="isLoadingTypes" required>
           <option value="" disabled>Select item type</option>
           <option v-for="type in productTypes" :key="type.productTypeId" :value="type.productTypeId">
-            {{ type.name }}
+            {{ type.typeName }}
           </option>
         </select>
       </div>

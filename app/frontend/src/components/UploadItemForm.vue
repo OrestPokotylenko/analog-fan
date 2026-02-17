@@ -9,6 +9,7 @@ const images = ref();
 const imagePreviews = ref([]);
 const description = ref('');
 const price = ref('');
+const quantity = ref('1');
 const type = ref('');
 const productTypes = ref([]);
 const isLoadingTypes = ref(false);
@@ -38,6 +39,10 @@ async function handleSubmit() {
         return;
     }
 
+    if (!validateQuantity()) {
+        return;
+    }
+
     try {
         isSubmitting.value = true;
         const formData = new FormData();
@@ -45,6 +50,7 @@ async function handleSubmit() {
         formData.append('description', description.value);
         formData.append('price', price.value);
         formData.append('type', type.value);
+        formData.append('quantity', quantity.value);
 
         if (images.value && images.value.length > 0) {
             images.value.forEach((image) => {
@@ -72,6 +78,7 @@ async function postItem(data) {
             imagePreviews.value = [];
             description.value = '';
             price.value = '';
+            quantity.value = '1';
             type.value = '';
 
             router.push('/my-items');
@@ -127,6 +134,23 @@ function validatePrice() {
 
   return true;
 }
+
+function validateQuantity() {
+  const quantityValue = quantity.value.trim();
+
+  if (!quantityValue) {
+    alert('Quantity is required.');
+    return false;
+  }
+
+  const quantityNumber = parseInt(quantityValue);
+  if (isNaN(quantityNumber) || quantityNumber < 1) {
+    alert('Please enter a valid quantity (at least 1).');
+    return false;
+  }
+
+  return true;
+}
 </script>
 
 <template>
@@ -170,6 +194,18 @@ function validatePrice() {
                     v-model="price" 
                     type="text"
                     placeholder="e.g., 15.99" 
+                    required 
+                />
+            </div>
+
+            <div class="form-group">
+                <label for="quantity" class="form-label">Quantity Available</label>
+                <TextInput 
+                    id="quantity"
+                    v-model="quantity" 
+                    type="number"
+                    min="1"
+                    placeholder="e.g., 5" 
                     required 
                 />
             </div>

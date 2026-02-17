@@ -21,6 +21,7 @@ const addedToCart = ref(false);
 const showLoginPrompt = ref(false);
 const isLiking = ref(false);
 const isAddingToCart = ref(false);
+const selectedQuantity = ref(1);
 
 onMounted(async () => {
   await fetchItem();
@@ -34,6 +35,7 @@ async function fetchItem() {
     const response = await axios.get(`/items/${route.params.id}`);
     item.value = response.data;
     selectedImageIndex.value = 0;
+    selectedQuantity.value = 1; // Reset quantity when loading new item
     if (item.value.userId) {
       await fetchSeller(item.value.userId);
     }
@@ -138,6 +140,16 @@ async function addToCart() {
     return;
   }
 
+  if (item.value.quantity < 1) {
+    showToast('This item is out of stock');
+    return;
+  }
+
+  if (selectedQuantity.value > item.value.quantity) {
+    showToast(`Only ${item.value.quantity} available`);
+    return;
+  }
+
   const existingItem = cartItems.value.find(ci => ci.itemId === item.value.itemId);
   if (existingItem) {
     showToast('Item already in cart');
@@ -148,14 +160,14 @@ async function addToCart() {
     isAddingToCart.value = true;
     // Optimistic update - show immediately
     addedToCart.value = true;
-    showToast('✓ Added to cart!');
+    showToast(`✓ Added ${selectedQuantity.value} to cart!`);
     
     // Add to local cart items immediately (optimistic)
     cartItems.value.push({
       itemId: item.value.itemId,
       title: item.value.title,
       price: item.value.price,
-      quantity: 1,
+      quantity: selectedQuantity.value,
       images: item.value.images
     });
     
@@ -163,7 +175,7 @@ async function addToCart() {
     const success = await CartService.addItem(
       user.userId,
       item.value.itemId,
-      1
+      selectedQuantity.value
     );
     
     if (!success) {
@@ -197,8 +209,25 @@ function buyNow() {
     return;
   }
 
+  if (item.value.quantity < 1) {
+    showToast('This item is out of stock');
+    return;
+  }
+
   addToCart();
   router.push('/cart');
+}
+
+function incrementQuantity() {
+  if (selectedQuantity.value < item.value.quantity) {
+    selectedQuantity.value++;
+  }
+}
+
+function decrementQuantity() {
+  if (selectedQuantity.value > 1) {
+    selectedQuantity.value--;
+  }
 }
 
 const formattedDate = computed(() => {
@@ -328,17 +357,55 @@ onUnmounted(() => {
           <div class="price-box">
             <span class="price-label">Price</span>
             <p class="price">€{{ item.price.toFixed(2) }}</p>
+            <span class="stock-info" :class="{ 'out-of-stock': item.quantity === 0 }">
+              {{ item.quantity === 0 ? 'Out of Stock' : `${item.quantity} available` }}
+            </span>
           </div>
           <div class="actions-section">
+            <!-- Quantity Selector -->
+            <div class="quantity-selector" v-if="item.quantity > 0">
+              <label class="quantity-label">Quantity:</label>
+              <div class="quantity-controls">
+                <button 
+                  type="button" 
+                  class="qty-btn" 
+                  @click="decrementQuantity"
+                  :disabled="selectedQuantity <= 1"
+                >
+                  −
+                </button>
+                <input 
+                  type="number" 
+                  v-model.number="selectedQuantity" 
+                  class="qty-input" 
+                  min="1" 
+                  :max="item.quantity"
+                  @input="selectedQuantity = Math.max(1, Math.min(item.quantity, selectedQuantity))"
+                />
+                <button 
+                  type="button" 
+                  class="qty-btn" 
+                  @click="incrementQuantity"
+                  :disabled="selectedQuantity >= item.quantity"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
             <button 
               class="btn btn-primary" 
-              :class="{ 'btn-added': addedToCart }"
+              :class="{ 'btn-added': addedToCart, 'btn-disabled': item.quantity === 0 }"
               @click="addToCart"
-              :disabled="isAddingToCart || addedToCart"
+              :disabled="isAddingToCart || addedToCart || item.quantity === 0"
             >
-              {{ addedToCart ? '✓ Added!' : (isAddingToCart ? 'Adding...' : 'Add to Cart') }}
+              {{ item.quantity === 0 ? 'Out of Stock' : (addedToCart ? '✓ Added!' : (isAddingToCart ? 'Adding...' : 'Add to Cart')) }}
             </button>
-            <button class="btn btn-accent" @click="buyNow">
+            <button 
+              class="btn btn-accent" 
+              @click="buyNow"
+              :disabled="item.quantity === 0"
+            >
               Buy Now
             </button>
           </div>
@@ -614,10 +681,105 @@ onUnmounted(() => {
   line-height: 1;
 }
 
+.stock-info {
+  font-size: 0.85em;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  display: inline-block;
+  width: fit-content;
+}
+
+.stock-info.out-of-stock {
+  background: rgba(0, 0, 0, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+}
+
 .actions-section {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.quantity-selector {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: linear-gradient(135deg, #16213e 0%, #0f0f1e 100%);
+  border: 1px solid #1a1a2e;
+  border-radius: 8px;
+}
+
+.quantity-label {
+  font-size: 0.9em;
+  color: white;
+  font-weight: 600;
+  margin: 0;
+}
+
+.quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.qty-btn {
+  background: #e94560;
+  color: white;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  font-size: 1.2em;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.qty-btn:hover:not(:disabled) {
+  background: #ff6b7a;
+  transform: scale(1.05);
+}
+
+.qty-btn:disabled {
+  background: #555;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.qty-input {
+  width: 60px;
+  height: 36px;
+  text-align: center;
+  background: #1a1a2e;
+  border: 1px solid #2a2a3e;
+  border-radius: 6px;
+  color: white;
+  font-size: 1em;
+  font-weight: 600;
+}
+
+.qty-input:focus {
+  outline: none;
+  border-color: #e94560;
+}
+
+/* Remove number input spinner arrows */
+.qty-input::-webkit-outer-spin-button,
+.qty-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.qty-input[type=number] {
+  -moz-appearance: textfield;
 }
 
 .btn {
@@ -642,6 +804,15 @@ onUnmounted(() => {
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   transform: translateY(-3px);
   box-shadow: 0 10px 30px rgba(233, 69, 96, 0.3);
+}
+
+.btn-primary.btn-disabled,
+.btn-primary:disabled {
+  background: linear-gradient(135deg, #2a2a3e 0%, #1f1f2e 100%);
+  border-color: #555;
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .btn-accent {

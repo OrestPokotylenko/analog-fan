@@ -7,7 +7,10 @@
         "php": "^8.2",
         "cloudinary/cloudinary_php": "^3.1",
         "firebase/php-jwt": "^6.0",
-        "phpmailer/phpmailer": "^6.9"
+        "phpmailer/phpmailer": "^6.9",
+        "stripe/stripe-php": "^19.3",
+        "myparcelnl/sdk": "^9.0",
+        "guzzlehttp/guzzle": "^7.10"
     },
     "autoload": {
         "psr-4": {

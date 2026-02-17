@@ -487,6 +487,19 @@ const total = computed(() => {
   margin: 0;
 }
 
+.item-quantity {
+  font-size: 1em;
+  color: white;
+  font-weight: 600;
+  margin: 0;
+  padding: 6px 12px;
+  background: rgba(233, 69, 96, 0.2);
+  border: 1px solid rgba(233, 69, 96, 0.4);
+  border-radius: 6px;
+  display: inline-block;
+  width: fit-content;
+}
+
 .item-price {
   font-size: 1.4em;
   color: #e94560;

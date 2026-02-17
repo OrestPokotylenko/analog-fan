@@ -21,7 +21,6 @@ const isAdmin = computed(() => {
 });
 
 const statusColors = {
-  pending: '#f59e0b',
   processing: '#3b82f6',
   shipped: '#8b5cf6',
   delivered: '#10b981',
@@ -36,7 +35,6 @@ const paymentStatusColors = {
 };
 
 const statusDescriptions = {
-  pending: '⏳ Awaiting Processing',
   processing: '⚙️ Order Being Prepared',
   shipped: '🚚 On The Way',
   delivered: '✅ Successfully Delivered',
@@ -173,12 +171,17 @@ function goBack() {
             <h2>📦 Shipping Information</h2>
             <div class="info-content">
               <p><strong>Address:</strong></p>
-              <p>{{ order.street }} {{ order.houseNumber }}</p>
-              <p>{{ order.zipCode }} {{ order.city }}</p>
-              <p>{{ order.province }}, {{ order.country }}</p>
+              <p>{{ order.street }} {{ order.houseNumber }},</p>
+              <p>{{ order.zipCode }} {{ order.city }},</p>
+              <p>{{ order.country }}</p>
               
-              <p style="margin-top: 1rem;"><strong>Email:</strong> {{ order.email }}</p>
-              <p><strong>Phone:</strong> {{ order.phone }}</p>
+              <p class="info-label"><strong>Email:</strong> {{ order.email }}</p>
+              <p v-if="order.phone"><strong>Phone:</strong> {{ order.phone }}</p>
+              
+              <div v-if="order.transactionId" class="transaction-info">
+                <p><strong>💳 Transaction ID:</strong></p>
+                <p class="transaction-id">{{ order.transactionId }}</p>
+              </div>
               
               <div v-if="order.trackingNumber" class="tracking-info">
                 <p><strong>🚚 Tracking Number:</strong></p>
@@ -214,7 +217,7 @@ function goBack() {
                   <div class="timeline-dot"></div>
                   <div class="timeline-content">
                     <strong>Processing</strong>
-                    <p>{{ ['processing', 'shipped', 'delivered'].includes(order.status) ? 'Order is being prepared' : 'Pending' }}</p>
+                    <p>Order is being prepared</p>
                   </div>
                 </div>
                 
@@ -448,6 +451,23 @@ function goBack() {
   color: rgba(255, 255, 255, 0.7);
   margin: 0.5rem 0;
   line-height: 1.6;
+}
+
+.info-label {
+  margin-top: 1rem !important;
+}
+
+.transaction-info {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.transaction-id {
+  font-family: monospace;
+  font-size: 0.9rem;
+  color: #e5e7eb;
+  word-break: break-all;
 }
 
 .payment-failed {

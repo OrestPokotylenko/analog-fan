@@ -70,17 +70,17 @@
         },
         {
             "name": "cloudinary/transformation-builder-sdk",
-            "version": "2.1.2",
-            "version_normalized": "2.1.2.0",
+            "version": "2.1.3",
+            "version_normalized": "2.1.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/cloudinary/php-transformation-builder-sdk.git",
-                "reference": "6ff4a84f14dbc5197563db63b6abbbe77a68d7e7"
+                "reference": "2f75344e1aa3c39d95a4610177e1a20fe7e35789"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/cloudinary/php-transformation-builder-sdk/zipball/6ff4a84f14dbc5197563db63b6abbbe77a68d7e7",
-                "reference": "6ff4a84f14dbc5197563db63b6abbbe77a68d7e7",
+                "url": "https://api.github.com/repos/cloudinary/php-transformation-builder-sdk/zipball/2f75344e1aa3c39d95a4610177e1a20fe7e35789",
+                "reference": "2f75344e1aa3c39d95a4610177e1a20fe7e35789",
                 "shasum": ""
             },
             "require": {
@@ -96,7 +96,7 @@
                 "squizlabs/php_codesniffer": "*",
                 "symfony/phpunit-bridge": "^7.2"
             },
-            "time": "2025-02-03T11:14:03+00:00",
+            "time": "2026-02-08T10:31:34+00:00",
             "type": "library",
             "installation-source": "dist",
             "autoload": {
@@ -126,7 +126,7 @@
             "support": {
                 "email": "info@cloudinary.com",
                 "issues": "https://github.com/cloudinary/php-transformation-builder-sdk/issues",
-                "source": "https://github.com/cloudinary/php-transformation-builder-sdk/tree/2.1.2"
+                "source": "https://github.com/cloudinary/php-transformation-builder-sdk/tree/2.1.3"
             },
             "install-path": "../cloudinary/transformation-builder-sdk"
         },
@@ -637,6 +637,71 @@
             "install-path": "../monolog/monolog"
         },
         {
+            "name": "myparcelnl/sdk",
+            "version": "9.0.2",
+            "version_normalized": "9.0.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/myparcelnl/sdk.git",
+                "reference": "3cfe8c43cd4c5c58c210da0076baaf298db2c53e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/myparcelnl/sdk/zipball/3cfe8c43cd4c5c58c210da0076baaf298db2c53e",
+                "reference": "3cfe8c43cd4c5c58c210da0076baaf298db2c53e",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.4 || ^8.0"
+            },
+            "require-dev": {
+                "fakerphp/faker": "^v1.16.0",
+                "phpunit/phpunit": "^9.6.22",
+                "psr/container": "~1.0.0"
+            },
+            "time": "2025-07-09T07:39:03+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "MyParcelNL\\Sdk\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Edie Lemoine",
+                    "email": "support@myparcel.nl"
+                },
+                {
+                    "name": "Joeri van Veen",
+                    "email": "support@myparcel.nl"
+                },
+                {
+                    "name": "Mark Ernst",
+                    "email": "support@myparcel.nl"
+                },
+                {
+                    "name": "Richard Perdaan",
+                    "email": "support@myparcel.nl"
+                }
+            ],
+            "description": "This package is designed to send and receive data from MyParcel by means of an API.",
+            "homepage": "https://myparcelnl.github.io/sdk",
+            "keywords": [
+                "myparcel",
+                "postnl"
+            ],
+            "support": {
+                "issues": "https://github.com/myparcelnl/sdk/issues",
+                "source": "https://github.com/myparcelnl/sdk/tree/v9.0.2"
+            },
+            "install-path": "../myparcelnl/sdk"
+        },
+        {
             "name": "phpmailer/phpmailer",
             "version": "v6.12.0",
             "version_normalized": "6.12.0.0",
@@ -988,6 +1053,68 @@
                 "source": "https://github.com/ralouphie/getallheaders/tree/develop"
             },
             "install-path": "../ralouphie/getallheaders"
+        },
+        {
+            "name": "stripe/stripe-php",
+            "version": "v19.3.0",
+            "version_normalized": "19.3.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/stripe/stripe-php.git",
+                "reference": "462272ae7560ee29bb891763fd0967d5a77784e5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/stripe/stripe-php/zipball/462272ae7560ee29bb891763fd0967d5a77784e5",
+                "reference": "462272ae7560ee29bb891763fd0967d5a77784e5",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "php": ">=5.6.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "3.72.0",
+                "phpstan/phpstan": "^1.2",
+                "phpunit/phpunit": "^5.7 || ^9.0"
+            },
+            "time": "2026-01-28T21:15:45+00:00",
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.0-dev"
+                }
+            },
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "Stripe\\": "lib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Stripe and contributors",
+                    "homepage": "https://github.com/stripe/stripe-php/contributors"
+                }
+            ],
+            "description": "Stripe PHP Library",
+            "homepage": "https://stripe.com/",
+            "keywords": [
+                "api",
+                "payment processing",
+                "stripe"
+            ],
+            "support": {
+                "issues": "https://github.com/stripe/stripe-php/issues",
+                "source": "https://github.com/stripe/stripe-php/tree/v19.3.0"
+            },
+            "install-path": "../stripe/stripe-php"
         },
         {
             "name": "symfony/deprecation-contracts",

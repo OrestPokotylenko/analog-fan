@@ -12,8 +12,10 @@ const routes = [
   { path: '/my-items', component: () => import('../views/SellingItems.vue') },
   { path: '/my-items/upload', component: () => import('../views/UploadItem.vue') },
   { path: '/my-items/:id', component: () => import('../views/EditItem.vue') },
+  { path: '/my-sales', component: () => import('../views/MySales.vue') },
   { path: '/cart', component: () => import('../views/ShoppingCart.vue') },
   { path: '/checkout', component: () => import('../views/Checkout.vue') },
+  { path: '/order-confirmation', component: () => import('../views/OrderConfirmation.vue') },
   { path: '/orders', component: () => import('../views/Orders.vue') },
   { path: '/orders/:id', component: () => import('../views/OrderDetails.vue') },
   { path: '/profile', component: () => import('../views/Profile.vue') },
@@ -40,7 +42,7 @@ router.beforeEach((to, from, next) => {
   }
   
   // Protected routes that require login
-  const protectedRoutes = ['/profile', '/cart', '/checkout', '/orders', '/my-items', '/wishlist', '/admin'];
+  const protectedRoutes = ['/profile', '/cart', '/checkout', '/order-confirmation', '/orders', '/my-items', '/my-sales', '/wishlist', '/admin'];
   const isProtectedRoute = protectedRoutes.some(route => to.path.startsWith(route));
   
   if (isProtectedRoute && (!token || isTokenExpired(token))) {

@@ -13,6 +13,10 @@ class ComposerStaticInite875ae8441d070d7dda5f4b47a2117aa
     );
 
     public static $prefixLengthsPsr4 = array (
+        'S' => 
+        array (
+            'Stripe\\' => 7,
+        ),
         'P' => 
         array (
             'Psr\\Log\\' => 8,
@@ -22,6 +26,7 @@ class ComposerStaticInite875ae8441d070d7dda5f4b47a2117aa
         ),
         'M' => 
         array (
+            'MyParcelNL\\Sdk\\' => 15,
             'Monolog\\' => 8,
         ),
         'G' => 
@@ -41,6 +46,10 @@ class ComposerStaticInite875ae8441d070d7dda5f4b47a2117aa
     );
 
     public static $prefixDirsPsr4 = array (
+        'Stripe\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/stripe/stripe-php/lib',
+        ),
         'Psr\\Log\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/log/src',
@@ -57,6 +66,10 @@ class ComposerStaticInite875ae8441d070d7dda5f4b47a2117aa
         'PHPMailer\\PHPMailer\\' => 
         array (
             0 => __DIR__ . '/..' . '/phpmailer/phpmailer/src',
+        ),
+        'MyParcelNL\\Sdk\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/myparcelnl/sdk/src',
         ),
         'Monolog\\' => 
         array (

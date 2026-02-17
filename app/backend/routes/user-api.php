@@ -20,7 +20,7 @@ Route::add('/api/users/{id}', function($id) use ($userController) {
     echo json_encode($userController->getUserById($id));
 });
 
-Route::add('/api/users', function() use ($userController) {
+Route::add('/api/users', function() use ($userController, $jwtService) {
     $userData = json_decode(file_get_contents('php://input'), true);
     $userExists = $userController->userExists($userData['username'], $userData['email']);
 
@@ -28,7 +28,9 @@ Route::add('/api/users', function() use ($userController) {
         $createdUser = $userController->createUser($userData, Role::USER);
 
         if ($createdUser) {
-            echo json_encode(['success' => true, 'user' => $createdUser]);
+            // Generate JWT token for automatic login after registration
+            $token = $jwtService->generateJWT($createdUser);
+            echo json_encode(['success' => true, 'token' => $token, 'user' => $createdUser]);
         } else {
             echo json_encode(['success' => false, 'message' => 'Passwords do not match']);
         }

@@ -12,11 +12,13 @@ const users = ref([]);
 const items = ref([]);
 const productTypes = ref([]);
 const orders = ref([]);
+const shipments = ref([]);
 const stats = ref({
   totalUsers: 0,
   totalItems: 0,
   totalProductTypes: 0,
-  totalOrders: 0
+  totalOrders: 0,
+  totalShipments: 0
 });
 const isLoading = ref(true);
 const activeTab = ref('dashboard');
@@ -106,12 +108,17 @@ async function loadData() {
     const ordersResponse = await OrderService.getAllOrders();
     orders.value = ordersResponse.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     
+    // Load shipments
+    const shipmentsResponse = await axios.get('/shipments/admin');
+    shipments.value = shipmentsResponse.data.data || [];
+    
     // Calculate stats
     stats.value = {
       totalUsers: users.value.length,
       totalItems: items.value.length,
       totalProductTypes: productTypes.value.length,
-      totalOrders: orders.value.length
+      totalOrders: orders.value.length,
+      totalShipments: shipments.value.length
     };
   } catch (error) {
     console.error('Failed to load admin data:', error);
@@ -298,6 +305,18 @@ function formatDateShort(dateString) {
   });
 }
 
+function getShipmentStatusColor(status) {
+  const colors = {
+    pending: '#f59e0b',
+    in_transit: '#3b82f6',
+    out_for_delivery: '#8b5cf6',
+    delivered: '#10b981',
+    failed: '#ef4444',
+    returned: '#6b7280'
+  };
+  return colors[status] || '#6b7280';
+}
+
 function viewOrderDetailsAdmin(orderId) {
   router.push(`/orders/${orderId}`);
 }
@@ -385,6 +404,12 @@ function logout() {
           @click="activeTab = 'types'"
         >
           Product Types ({{ productTypes.length }})
+        </button>
+        <button 
+          :class="['tab', { active: activeTab === 'shipments' }]" 
+          @click="activeTab = 'shipments'"
+        >
+          Shipments ({{ shipments.length }})
         </button>
       </div>
 
@@ -555,6 +580,77 @@ function logout() {
                     Refund
                   </button>
                 </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Shipments Tab -->
+      <div v-if="activeTab === 'shipments'" class="tab-content">
+        <div class="table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Order #</th>
+                <th>Customer</th>
+                <th>Address</th>
+                <th>Tracking #</th>
+                <th>Carrier</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="shipment in shipments" :key="shipment.id">
+                <td><strong>{{ shipment.order_number }}</strong></td>
+                <td>{{ shipment.email }}</td>
+                <td>
+                  {{ shipment.street }} {{ shipment.house_number }}<br>
+                  {{ shipment.zip_code }} {{ shipment.city }}, {{ shipment.country }}
+                </td>
+                <td>
+                  <a 
+                    v-if="shipment.tracking_url" 
+                    :href="shipment.tracking_url" 
+                    target="_blank" 
+                    class="tracking-link"
+                  >
+                    {{ shipment.tracking_number }}
+                  </a>
+                  <span v-else>{{ shipment.tracking_number }}</span>
+                </td>
+                <td>{{ shipment.carrier }}</td>
+                <td>
+                  <span 
+                    class="status-badge-table" 
+                    :style="{ backgroundColor: getShipmentStatusColor(shipment.delivery_status) }"
+                  >
+                    {{ shipment.delivery_status }}
+                  </span>
+                </td>
+                <td>{{ formatDateShort(shipment.created_at) }}</td>
+                <td>
+                  <a 
+                    :href="`http://localhost/api/shipments/${shipment.id}/label`" 
+                    target="_blank" 
+                    class="btn-view"
+                  >
+                    📄 Label
+                  </a>
+                  <a 
+                    v-if="shipment.tracking_url" 
+                    :href="shipment.tracking_url" 
+                    target="_blank" 
+                    class="btn-track"
+                  >
+                    📍 Track
+                  </a>
+                </td>
+              </tr>
+              <tr v-if="shipments.length === 0">
+                <td colspan="8" class="no-data">No shipments found</td>
               </tr>
             </tbody>
           </table>
@@ -1239,6 +1335,44 @@ function logout() {
 .btn-refund:hover {
   background: #7c3aed;
   transform: scale(1.05);
+}
+
+.btn-track {
+  padding: 8px 16px;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s;
+  margin-left: 5px;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-track:hover {
+  background: #059669;
+  transform: scale(1.05);
+}
+
+.tracking-link {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s;
+}
+
+.tracking-link:hover {
+  color: #5568d3;
+  text-decoration: underline;
+}
+
+.no-data {
+  text-align: center;
+  padding: 40px;
+  color: #a0a0a0;
+  font-style: italic;
 }
 
 @media (max-width: 768px) {

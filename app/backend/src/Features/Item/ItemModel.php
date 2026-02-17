@@ -36,28 +36,38 @@ class ItemModel extends BaseModel {
         return array_map([$this, 'normalizeRow'], $rows);
     }
 
-    public function postItem($userId, $title, $description, $price, $type, $imagesPath) {
+    public function postItem($userId, $title, $description, $price, $type, $imagesPath, $quantity = 1) {
         $imageJson = json_encode(is_array($imagesPath) ? $imagesPath : []);
-        $sql = "INSERT INTO {$this->table} (user_id, title, description, price, product_type_id, images)
-                VALUES (?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO {$this->table} (user_id, title, description, price, product_type_id, images, quantity)
+                VALUES (?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->pdo->prepare($sql);
 
-        if (!$stmt->execute([$userId, $title, $description, $price, $type, $imageJson])) {
+        if (!$stmt->execute([$userId, $title, $description, $price, $type, $imageJson, $quantity])) {
             throw new Exception('Failed to create item');
         }
 
         return $this->fetchItemById((int)$this->pdo->lastInsertId());
     }
 
-    public function updateItem($id, $userId, $title, $description, $price, $type, $imagesPath) {
+    public function updateItem($id, $userId, $title, $description, $price, $type, $imagesPath, $quantity = null) {
         $imageJson = json_encode(is_array($imagesPath) ? $imagesPath : []);
-        $sql = "UPDATE {$this->table}
-                SET title = ?, description = ?, price = ?, product_type_id = ?, images = ?
-                WHERE item_id = ? AND user_id = ?";
-        $stmt = $this->pdo->prepare($sql);
-
-        if (!$stmt->execute([$title, $description, $price, $type, $imageJson, $id, $userId])) {
-            throw new Exception('Failed to update item');
+        
+        if ($quantity !== null) {
+            $sql = "UPDATE {$this->table}
+                    SET title = ?, description = ?, price = ?, product_type_id = ?, images = ?, quantity = ?
+                    WHERE item_id = ? AND user_id = ?";
+            $stmt = $this->pdo->prepare($sql);
+            if (!$stmt->execute([$title, $description, $price, $type, $imageJson, $quantity, $id, $userId])) {
+                throw new Exception('Failed to update item');
+            }
+        } else {
+            $sql = "UPDATE {$this->table}
+                    SET title = ?, description = ?, price = ?, product_type_id = ?, images = ?
+                    WHERE item_id = ? AND user_id = ?";
+            $stmt = $this->pdo->prepare($sql);
+            if (!$stmt->execute([$title, $description, $price, $type, $imageJson, $id, $userId])) {
+                throw new Exception('Failed to update item');
+            }
         }
 
         return $this->fetchItemById($id);
@@ -78,16 +88,33 @@ class ItemModel extends BaseModel {
         return array_map([$this, 'normalizeRow'], $rows);
     }
 
+    public function decrementQuantity($itemId, $quantity) {
+        $sql = "UPDATE {$this->table} SET quantity = quantity - ? WHERE item_id = ? AND quantity >= ?";
+        $stmt = $this->pdo->prepare($sql);
+        
+        if (!$stmt->execute([$quantity, $itemId, $quantity])) {
+            throw new Exception('Failed to decrement quantity');
+        }
+        
+        if ($stmt->rowCount() === 0) {
+            throw new Exception('Insufficient quantity available');
+        }
+        
+        return $this->fetchItemById($itemId);
+    }
+
     private function normalizeRow(array $row): array {
         return [
-            'itemId'      => (int)($row['item_id'] ?? 0),
-            'userId'      => (int)($row['user_id'] ?? 0),
-            'title'       => $row['title'] ?? '',
-            'description' => $row['description'] ?? '',
-            'price'       => is_numeric($row['price'] ?? 0) ? (float)$row['price'] : 0.0,
-            'type'        => $row['type'] ?? '',
-            'createdAt'   => $row['creation_date'] ?? null,
-            'imagesPath'  => $this->decodeImages($row['images'] ?? '[]'),
+            'itemId'        => (int)($row['item_id'] ?? 0),
+            'userId'        => (int)($row['user_id'] ?? 0),
+            'title'         => $row['title'] ?? '',
+            'description'   => $row['description'] ?? '',
+            'price'         => is_numeric($row['price'] ?? 0) ? (float)$row['price'] : 0.0,
+            'productTypeId' => (int)($row['product_type_id'] ?? 0),
+            'type'          => $row['type'] ?? '',
+            'quantity'      => (int)($row['quantity'] ?? 1),
+            'createdAt'     => $row['creation_date'] ?? null,
+            'imagesPath'    => $this->decodeImages($row['images'] ?? '[]'),
         ];
     }
 

@@ -1,11 +1,14 @@
 <script setup>
 import { ref, onMounted, inject, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import Header from '../components/Header.vue';
 import OrderService from '../services/OrderService';
+import PaymentService from '../services/PaymentService';
+import CartService from '../services/CartService';
 import { isTokenExpired, clearAuthState } from '../services/authHelpers';
 
 const router = useRouter();
+const route = useRoute();
 const $auth = inject('$auth');
 
 const orders = ref([]);
@@ -13,7 +16,6 @@ const isLoading = ref(true);
 const errorMessage = ref('');
 
 const statusColors = {
-  pending: '#f59e0b',
   processing: '#3b82f6',
   shipped: '#8b5cf6',
   delivered: '#10b981',
@@ -28,7 +30,6 @@ const paymentStatusColors = {
 };
 
 const statusDescriptions = {
-  pending: '⏳ Awaiting Processing',
   processing: '⚙️ Order Being Prepared',
   shipped: '🚚 On The Way',
   delivered: '✅ Successfully Delivered',
@@ -61,6 +62,40 @@ onMounted(async () => {
   if (user && user.role === 'admin') {
     router.push('/admin');
     return;
+  }
+  
+  // Check if returning from Stripe payment (iDEAL redirect)
+  const paymentIntent = route.query.payment_intent;
+  const paymentIntentClientSecret = route.query.payment_intent_client_secret;
+  
+  if (paymentIntent && paymentIntentClientSecret) {
+    try {
+      // Verify payment status
+      const status = await PaymentService.getPaymentStatus(paymentIntent);
+      
+      if (status === 'succeeded') {
+        // Find the most recent pending order and update it
+        const tempOrders = await OrderService.getUserOrders(user.userId);
+        const pendingOrder = tempOrders.find(o => o.paymentStatus === 'pending');
+        
+        if (pendingOrder) {
+          await OrderService.updateOrderStatus(pendingOrder.id, {
+            payment_status: 'paid',
+            order_status: 'processing',
+            transaction_id: paymentIntent,
+          });
+          
+          // Clear the cart
+          const userCart = await CartService.getOrCreateCart(user.userId);
+          await CartService.clearCart(userCart.cartId);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to process payment return:', error);
+    }
+    
+    // Clean up URL
+    router.replace({ path: '/orders' });
   }
   
   await loadOrders();
@@ -163,7 +198,7 @@ function viewOrderDetails(orderId) {
             <div class="order-address">
               <p><strong>📍 Shipping Address:</strong></p>
               <p>{{ order.street }} {{ order.houseNumber }}</p>
-              <p>{{ order.zipCode }} {{ order.city }}, {{ order.province }}</p>
+              <p>{{ order.zipCode }} {{ order.city }}</p>
               <p>{{ order.country }}</p>
             </div>
 

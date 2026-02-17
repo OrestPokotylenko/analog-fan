@@ -177,6 +177,9 @@ onBeforeUnmount(() => {
                 <RouterLink to="/my-items" class="user-dropdown-item" @click="userDropdownOpen = false; closeMobileMenu()">
                   <span>🛍️</span> My Items
                 </RouterLink>
+                <RouterLink to="/my-sales" class="user-dropdown-item" @click="userDropdownOpen = false; closeMobileMenu()">
+                  <span>💰</span> My Sales
+                </RouterLink>
                 <button class="user-dropdown-item logout-item" @click="logout">
                   <span>🚪</span> Logout
                 </button>

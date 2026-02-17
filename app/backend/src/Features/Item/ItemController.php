@@ -30,9 +30,13 @@ class ItemController {
         return $this->itemModel->fetchUserItems($userId);
     }
 
-    public function postItem($userId, $title, $description, $price, $type, $files) {
+    public function postItem($userId, $title, $description, $price, $type, $files, $quantity = 1) {
         if (empty($title) || $price <= 0 || empty($type)) {
             throw new Exception('Missing required fields', 400);
+        }
+
+        if ($quantity < 1) {
+            throw new Exception('Quantity must be at least 1', 400);
         }
 
         $imagesPath = [];
@@ -40,12 +44,16 @@ class ItemController {
             $imagesPath = $this->uploadImages($files);
         }
 
-        return $this->itemModel->postItem($userId, $title, $description, $price, $type, $imagesPath);
+        return $this->itemModel->postItem($userId, $title, $description, $price, $type, $imagesPath, $quantity);
     }
 
-    public function updateItemWithFiles($id, $userId, $title, $description, $price, $type, $files, $existingImages = []) {
+    public function updateItemWithFiles($id, $userId, $title, $description, $price, $type, $files, $existingImages = [], $quantity = null) {
         if (empty($title) || $price <= 0 || empty($type)) {
             throw new Exception('Missing required fields', 400);
+        }
+
+        if ($quantity !== null && $quantity < 1) {
+            throw new Exception('Quantity must be at least 1', 400);
         }
 
         $newImages = [];
@@ -58,14 +66,14 @@ class ItemController {
         $allImages = array_merge($existingImages, $newImages);
         error_log('Total images: ' . count($allImages) . ' - ' . json_encode($allImages));
         
-        return $this->itemModel->updateItem($id, $userId, $title, $description, $price, $type, $allImages);
+        return $this->itemModel->updateItem($id, $userId, $title, $description, $price, $type, $allImages, $quantity);
     }
 
-    public function updateItem($id, $userId, $title, $description, $price, $type, $imagesPath = []) {
+    public function updateItem($id, $userId, $title, $description, $price, $type, $imagesPath = [], $quantity = null) {
         if (!is_array($imagesPath)) {
             $imagesPath = [];
         }
-        return $this->itemModel->updateItem($id, $userId, $title, $description, $price, $type, $imagesPath);
+        return $this->itemModel->updateItem($id, $userId, $title, $description, $price, $type, $imagesPath, $quantity);
     }
 
     public function deleteItem($id, $userId) {

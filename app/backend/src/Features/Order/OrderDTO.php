@@ -11,7 +11,6 @@ class OrderDTO {
     public readonly string $street;
     public readonly string $houseNumber;
     public readonly string $city;
-    public readonly ?string $province;
     public readonly string $zipCode;
     public readonly string $country;
     public readonly float $subtotal;
@@ -37,7 +36,6 @@ class OrderDTO {
         string $street,
         string $houseNumber,
         string $city,
-        ?string $province,
         string $zipCode,
         string $country,
         float $subtotal,
@@ -62,7 +60,6 @@ class OrderDTO {
         $this->street = $street;
         $this->houseNumber = $houseNumber;
         $this->city = $city;
-        $this->province = $province;
         $this->zipCode = $zipCode;
         $this->country = $country;
         $this->subtotal = $subtotal;
@@ -90,7 +87,6 @@ class OrderDTO {
             $orderData['street'],
             $orderData['house_number'],
             $orderData['city'],
-            $orderData['province'] ?? null,
             $orderData['zip_code'],
             $orderData['country'],
             (float)$orderData['subtotal'],
@@ -119,7 +115,6 @@ class OrderDTO {
             'street' => $this->street,
             'houseNumber' => $this->houseNumber,
             'city' => $this->city,
-            'province' => $this->province,
             'zipCode' => $this->zipCode,
             'country' => $this->country,
             'subtotal' => $this->subtotal,

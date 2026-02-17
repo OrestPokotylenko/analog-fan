@@ -1,9 +1,10 @@
 <script setup>
-import { ref, computed, onMounted, inject } from 'vue';
+import { ref, computed, onMounted, onUnmounted, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import Header from '../components/Header.vue';
 import CartService from '../services/CartService';
 import OrderService from '../services/OrderService';
+import PaymentService from '../services/PaymentService';
 import { isTokenExpired, clearAuthState } from '../services/authHelpers';
 
 const router = useRouter();
@@ -13,6 +14,11 @@ const cartItems = ref([]);
 const isLoading = ref(true);
 const isProcessing = ref(false);
 const errorMessage = ref('');
+const paymentElements = ref(null);
+const paymentElement = ref(null);
+const clientSecret = ref('');
+const createdOrder = ref(null);
+const selectedPaymentMethod = ref('card');
 
 // Form data
 const formData = ref({
@@ -21,7 +27,6 @@ const formData = ref({
   street: '',
   houseNumber: '',
   city: '',
-  province: '',
   zipCode: '',
   country: 'Netherlands',
   paymentMethod: 'credit_card'
@@ -45,11 +50,18 @@ onMounted(async () => {
   }
 
   await loadCart();
+  await initializeStripe();
   
   // Pre-fill email from user data
   const user = JSON.parse(localStorage.getItem('user'));
   if (user && user.email) {
     formData.value.email = user.email;
+  }
+});
+
+onUnmounted(() => {
+  if (paymentElement.value) {
+    paymentElement.value.destroy();
   }
 });
 
@@ -90,6 +102,41 @@ const total = computed(() => {
   return subtotal.value + taxAmount.value + shipping;
 });
 
+async function initializeStripe() {
+  try {
+    await PaymentService.initialize();
+    
+    // Create payment intent immediately
+    const paymentIntent = await PaymentService.createPaymentIntent(
+      total.value,
+      null // No order ID yet
+    );
+    
+    clientSecret.value = paymentIntent.clientSecret;
+    
+    // Initialize payment elements
+    const { elements, paymentElement: element } = await PaymentService.createCheckoutSession(clientSecret.value);
+    paymentElements.value = elements;
+    paymentElement.value = element;
+    
+    // Listen for payment method changes
+    element.on('change', (event) => {
+      if (event.value?.type) {
+        selectedPaymentMethod.value = event.value.type;
+      }
+    });
+    
+    // Mount payment element
+    const container = document.getElementById('payment-element');
+    if (container) {
+      element.mount('#payment-element');
+    }
+  } catch (error) {
+    console.error('Failed to initialize Stripe:', error);
+    errorMessage.value = 'Failed to initialize payment system';
+  }
+}
+
 async function placeOrder() {
   if (isProcessing.value) return;
   
@@ -98,6 +145,11 @@ async function placeOrder() {
       !formData.value.street || !formData.value.houseNumber ||
       !formData.value.city || !formData.value.zipCode) {
     errorMessage.value = 'Please fill in all required fields';
+    return;
+  }
+
+  if (!paymentElements.value) {
+    errorMessage.value = 'Payment method not loaded. Please refresh the page.';
     return;
   }
 
@@ -111,44 +163,66 @@ async function placeOrder() {
     const orderData = {
       user_id: user.userId,
       email: formData.value.email,
-      phone: formData.value.phone,
+      phone_number: formData.value.phone,
       street: formData.value.street,
       house_number: formData.value.houseNumber,
       city: formData.value.city,
-      province: formData.value.province || '',
       zip_code: formData.value.zipCode,
       country: formData.value.country,
       subtotal: subtotal.value,
       tax_amount: taxAmount.value,
       shipping_cost: shipping,
       total_amount: total.value,
-      payment_method: formData.value.paymentMethod,
+      payment_method: selectedPaymentMethod.value === 'card' ? 'Credit Card' : selectedPaymentMethod.value === 'ideal' ? 'iDEAL' : selectedPaymentMethod.value === 'google_pay' ? 'Google Pay' : 'Other',
       payment_status: 'pending',
-      order_status: 'pending'
+      order_status: 'processing'
     };
 
     // Create the order
-    const createdOrder = await OrderService.createOrder(orderData);
+    createdOrder.value = await OrderService.createOrder(orderData);
     
     // Create order items for each cart item
     for (const cartItem of cartItems.value) {
       await OrderService.createOrderItem({
-        order_id: createdOrder.id,
+        order_id: createdOrder.value.id,
         item_id: cartItem.itemId,
         quantity: cartItem.quantity,
         price_at_purchase: cartItem.price
       });
     }
     
+    // Process payment
+    const billingDetails = {
+      name: user.username || formData.value.email,
+      email: formData.value.email,
+      phone: formData.value.phone,
+      address: {
+        line1: `${formData.value.street} ${formData.value.houseNumber}`,
+        city: formData.value.city,
+        state: '', // Required by Stripe even if not collected
+        postal_code: formData.value.zipCode,
+        country: formData.value.country === 'Netherlands' ? 'NL' : formData.value.country,
+      },
+    };
+    
+    const paymentResult = await PaymentService.processPaymentWithElements(paymentElements.value, billingDetails);
+    
+    // Update order status with transaction ID
+    await OrderService.updateOrderStatus(createdOrder.value.id, {
+      payment_status: 'paid',
+      order_status: 'processing',
+      transaction_id: paymentResult.paymentIntentId || null,
+    });
+    
     // Clear the cart
     const userCart = await CartService.getOrCreateCart(user.userId);
     await CartService.clearCart(userCart.cartId);
     
-    // Redirect to orders page
-    router.push('/orders');
+    // Redirect to order confirmation page
+    router.push(`/order-confirmation?order_id=${createdOrder.value.id}`);
   } catch (error) {
     console.error('Failed to place order:', error);
-    errorMessage.value = 'Failed to place order. Please try again.';
+    errorMessage.value = error.message || 'Failed to place order. Please try again.';
   } finally {
     isProcessing.value = false;
   }
@@ -236,14 +310,6 @@ function goBack() {
                   required
                 />
               </div>
-              <div class="form-group">
-                <label>Province</label>
-                <input 
-                  v-model="formData.province" 
-                  type="text" 
-                  placeholder="North Holland"
-                />
-              </div>
             </div>
             
             <div class="form-row">
@@ -270,32 +336,7 @@ function goBack() {
 
           <div class="form-section">
             <h2>Payment Method</h2>
-            <div class="payment-methods">
-              <label class="payment-option">
-                <input 
-                  type="radio" 
-                  v-model="formData.paymentMethod" 
-                  value="credit_card"
-                />
-                <span>💳 Credit Card</span>
-              </label>
-              <label class="payment-option">
-                <input 
-                  type="radio" 
-                  v-model="formData.paymentMethod" 
-                  value="paypal"
-                />
-                <span>🅿️ PayPal</span>
-              </label>
-              <label class="payment-option">
-                <input 
-                  type="radio" 
-                  v-model="formData.paymentMethod" 
-                  value="ideal"
-                />
-                <span>🏦 iDEAL</span>
-              </label>
-            </div>
+            <div id="payment-element" class="payment-element-container"></div>
           </div>
         </div>
 
@@ -343,10 +384,10 @@ function goBack() {
 
             <button 
               @click="placeOrder" 
-              :disabled="isProcessing"
+              :disabled="isProcessing || !clientSecret"
               class="btn-place-order"
             >
-              {{ isProcessing ? 'Processing...' : 'Place Order' }}
+              {{ isProcessing ? 'Processing Payment...' : 'Place Order' }}
             </button>
 
             <p class="security-note">🔒 Your payment information is secure</p>
@@ -360,7 +401,8 @@ function goBack() {
 <style scoped>
 .checkout-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+  padding-top: 70px;
   padding-bottom: 3rem;
 }
 
@@ -372,7 +414,7 @@ function goBack() {
 
 .btn-back {
   background: white;
-  color: #667eea;
+  color: #e94560;
   padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 25px;
@@ -424,7 +466,7 @@ function goBack() {
 }
 
 .checkout-form h1 {
-  color: #667eea;
+  color: #e94560;
   font-size: 2rem;
   margin-bottom: 1.5rem;
 }
@@ -491,7 +533,7 @@ function goBack() {
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #e94560;
 }
 
 .payment-methods {
@@ -514,7 +556,7 @@ function goBack() {
 }
 
 .payment-option:hover {
-  border-color: #667eea;
+  border-color: #e94560;
   background: #f9fafb;
 }
 
@@ -601,7 +643,7 @@ function goBack() {
 
 .item-price {
   font-weight: 700;
-  color: #667eea;
+  color: #e94560;
   white-space: nowrap;
 }
 
@@ -630,7 +672,7 @@ function goBack() {
 .btn-place-order {
   width: 100%;
   padding: 1rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e94560 0%, #ff6b7a 100%);
   color: white;
   border: none;
   border-radius: 15px;
@@ -643,7 +685,7 @@ function goBack() {
 
 .btn-place-order:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 10px 25px rgba(233, 69, 96, 0.4);
 }
 
 .btn-place-order:disabled {
@@ -656,6 +698,49 @@ function goBack() {
   color: #6b7280;
   font-size: 0.85rem;
   margin-top: 1rem;
+}
+
+.payment-element-container {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  min-height: 200px;
+}
+
+.btn-create-order {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #e94560 0%, #ff6b7a 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-create-order:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(233, 69, 96, 0.4);
+}
+
+.btn-create-order:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.payment-info {
+  text-align: center;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: white;
+  font-size: 0.95rem;
+}
+
+.payment-info p {
+  margin: 0;
 }
 
 @media (max-width: 968px) {

@@ -25,6 +25,11 @@ Route::add('/api/orders/user/([0-9]+)', function ($userId) use ($orderController
     $orderController->getOrdersByUserId((int)$userId);
 });
 
+// Get orders by seller ID (orders containing items sold by this user)
+Route::add('/api/orders/seller/([0-9]+)', function ($sellerId) use ($orderController) {
+    $orderController->getOrdersBySellerId((int)$sellerId);
+});
+
 // Get specific order by ID
 Route::add('/api/orders/([0-9]+)', function ($orderId) use ($orderController) {
     $orderController->getOrderById((int)$orderId);

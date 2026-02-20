@@ -10,7 +10,8 @@
         "phpmailer/phpmailer": "^6.9",
         "stripe/stripe-php": "^19.3",
         "myparcelnl/sdk": "^9.0",
-        "guzzlehttp/guzzle": "^7.10"
+        "guzzlehttp/guzzle": "^7.10",
+        "cboden/ratchet": "^0.4"
     },
     "autoload": {
         "psr-4": {

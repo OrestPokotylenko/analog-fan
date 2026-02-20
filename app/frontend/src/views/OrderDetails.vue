@@ -708,4 +708,46 @@ function goBack() {
     text-align: left;
   }
 }
+
+@media (max-width: 768px) {
+  .order-details-container {
+    padding: 20px 15px;
+  }
+  
+  .details-card {
+    padding: 24px;
+  }
+  
+  h2 {
+    font-size: 1.5em;
+  }
+  
+  h3 {
+    font-size: 1.2em;
+  }
+}
+
+@media (max-width: 480px) {
+  .order-details-container {
+    padding: 15px 10px;
+  }
+  
+  .details-card {
+    padding: 20px;
+  }
+  
+  .order-item {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .item-image {
+    max-width: 100%;
+  }
+  
+  .back-btn {
+    padding: 8px 16px;
+    font-size: 0.9em;
+  }
+}
 </style>

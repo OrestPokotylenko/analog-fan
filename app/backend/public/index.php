@@ -26,5 +26,6 @@ require_once(__DIR__ . '/../routes/order-api.php');
 require_once(__DIR__ . '/../routes/order-item-api.php');
 require_once(__DIR__ . '/../routes/payment-api.php');
 require_once(__DIR__ . '/../routes/shipment-api.php');
+require_once(__DIR__ . '/../routes/message-api.php');
 
 Route::run();

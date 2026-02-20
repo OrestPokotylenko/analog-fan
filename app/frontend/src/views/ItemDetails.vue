@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from '../services/axiosConfig';
 import CartService from '../services/CartService';
+import MessageService from '../services/MessageService';
 import Header from '../components/Header.vue';
 import LoginPrompt from '../components/LoginPrompt.vue';
 
@@ -257,6 +258,31 @@ function showNextImage() {
     (selectedImageIndex.value + 1) % item.value.imagesPath.length;
 }
 
+async function contactSeller() {
+  const user = JSON.parse(localStorage.getItem('user'));
+  if (!user || !user.userId) {
+    showLoginPrompt.value = true;
+    return;
+  }
+
+  if (item.value.userId === user.userId) {
+    showToast('You cannot message yourself');
+    return;
+  }
+
+  // Navigate to messages page with item and seller info
+  // Conversation will be created when first message is sent
+  router.push({
+    path: '/messages/new',
+    query: {
+      itemId: item.value.itemId,
+      sellerId: item.value.userId,
+      sellerUsername: seller.value?.username || 'Seller',
+      itemTitle: item.value.title
+    }
+  });
+}
+
 onUnmounted(() => {
   // cleanup
 });
@@ -424,6 +450,9 @@ onUnmounted(() => {
             <p class="seller-name">{{ seller.username }}</p>
             <p class="seller-email">{{ seller.email }}</p>
           </div>
+          <button class="btn btn-secondary contact-seller-btn" @click="contactSeller">
+            💬 Contact Seller
+          </button>
         </div>
       </div>
     </div>
@@ -866,6 +895,26 @@ onUnmounted(() => {
   font-size: 0.85em;
   color: #b0b0b0;
   margin: 0;
+}
+
+.contact-seller-btn {
+  margin-top: 16px;
+  width: 100%;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #e94560 0%, #ff6b7a 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.95em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(233, 69, 96, 0.3);
+}
+
+.contact-seller-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(233, 69, 96, 0.4);
 }
 
 @media (max-width: 1024px) {

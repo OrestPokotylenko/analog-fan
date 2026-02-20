@@ -20,6 +20,8 @@ const routes = [
   { path: '/orders/:id', component: () => import('../views/OrderDetails.vue') },
   { path: '/profile', component: () => import('../views/Profile.vue') },
   { path: '/wishlist', component: () => import('../views/Wishlist.vue') },
+  { path: '/messages', component: () => import('../views/Messages.vue') },
+  { path: '/messages/:conversationId', component: () => import('../views/Messages.vue') },
   { path: '/admin', component: () => import('../views/Admin.vue') }
 ];
 
@@ -42,7 +44,7 @@ router.beforeEach((to, from, next) => {
   }
   
   // Protected routes that require login
-  const protectedRoutes = ['/profile', '/cart', '/checkout', '/order-confirmation', '/orders', '/my-items', '/my-sales', '/wishlist', '/admin'];
+  const protectedRoutes = ['/profile', '/cart', '/checkout', '/order-confirmation', '/orders', '/my-items', '/my-sales', '/wishlist', '/messages', '/admin'];
   const isProtectedRoute = protectedRoutes.some(route => to.path.startsWith(route));
   
   if (isProtectedRoute && (!token || isTokenExpired(token))) {

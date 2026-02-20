@@ -3,6 +3,8 @@ import { inject, ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from '../services/axiosConfig';
 import CartService from '../services/CartService';
+import MessageService from '../services/MessageService';
+import WebSocketService from '../services/WebSocketService';
 
 const router = useRouter();
 
@@ -20,7 +22,16 @@ const isLoadingTypes = ref(false);
 const mobileMenuOpen = ref(false);
 const searchQuery = ref('');
 const cartCount = ref(0);
+const unreadMessagesCount = ref(0);
 const userDropdownOpen = ref(false);
+
+// WebSocket message handler for unread count updates
+const handleWebSocketMessage = (data) => {
+  if (data.type === 'new_message') {
+    // Update unread count when receiving a message
+    updateUnreadMessagesCount();
+  }
+};
 
 async function fetchProductTypes() {
   try {
@@ -83,6 +94,20 @@ async function updateCartCount() {
   }
 }
 
+async function updateUnreadMessagesCount() {
+  try {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user && user.userId) {
+      unreadMessagesCount.value = await MessageService.getUnreadCount(user.userId);
+    } else {
+      unreadMessagesCount.value = 0;
+    }
+  } catch (error) {
+    console.error('Failed to load unread messages count:', error);
+    unreadMessagesCount.value = 0;
+  }
+}
+
 function handleStorageChange(e) {
   if (e.key === 'cart') {
     updateCartCount();
@@ -93,16 +118,35 @@ function handleCartUpdate() {
   updateCartCount();
 }
 
+function handleMessagesUpdate() {
+  updateUnreadMessagesCount();
+}
+
 onMounted(() => {
   fetchProductTypes();
   updateCartCount();
+  updateUnreadMessagesCount();
   window.addEventListener('storage', handleStorageChange);
   window.addEventListener('cart-updated', handleCartUpdate);
+  window.addEventListener('messages-updated', handleMessagesUpdate);
+  
+  // Connect to WebSocket if user is logged in
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  if (user && user.userId) {
+    if (!WebSocketService.isConnected()) {
+      WebSocketService.connect(user.userId);
+    }
+    WebSocketService.onMessage(handleWebSocketMessage);
+  }
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener('storage', handleStorageChange);
   window.removeEventListener('cart-updated', handleCartUpdate);
+  window.removeEventListener('messages-updated', handleMessagesUpdate);
+  
+  // Remove WebSocket handler
+  WebSocketService.removeMessageHandler(handleWebSocketMessage);
 });
 </script>
 
@@ -167,6 +211,10 @@ onBeforeUnmount(() => {
               <div :class="['user-dropdown', { 'show': userDropdownOpen }]">
                 <RouterLink to="/profile" class="user-dropdown-item" @click="userDropdownOpen = false; closeMobileMenu()">
                   <span>👤</span> Profile
+                </RouterLink>
+                <RouterLink to="/messages" class="user-dropdown-item" @click="userDropdownOpen = false; closeMobileMenu()">
+                  <span>💬</span> Messages
+                  <span v-if="unreadMessagesCount > 0" class="dropdown-badge">{{ unreadMessagesCount }}</span>
                 </RouterLink>
                 <RouterLink to="/wishlist" class="user-dropdown-item" @click="userDropdownOpen = false; closeMobileMenu()">
                   <span>❤️</span> Wishlist
@@ -475,6 +523,7 @@ onBeforeUnmount(() => {
   text-align: left;
   cursor: pointer;
   font-weight: 500;
+  position: relative;
 }
 
 .user-dropdown-item:hover {
@@ -484,6 +533,22 @@ onBeforeUnmount(() => {
 
 .user-dropdown-item span {
   font-size: 1.1em;
+}
+
+.dropdown-badge {
+  margin-left: auto;
+  background: linear-gradient(135deg, #e94560 0%, #ff6b7a 100%);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(233, 69, 96, 0.4);
 }
 
 .logout-item {

@@ -664,6 +664,16 @@ function formatDate(dateString) {
   opacity: 0;
 }
 
+@media (max-width: 1024px) {
+  .container {
+    padding: 30px 20px;
+  }
+  
+  .profile-card {
+    padding: 30px;
+  }
+}
+
 @media (max-width: 768px) {
   .container {
     padding: 20px 15px;
@@ -688,6 +698,37 @@ function formatDate(dateString) {
   
   .form-actions .btn {
     width: 100%;
+  }
+  
+  h2 {
+    font-size: 1.5em;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 15px 10px;
+  }
+  
+  .profile-card {
+    padding: 20px;
+  }
+  
+  h2 {
+    font-size: 1.3em;
+  }
+  
+  .btn {
+    padding: 10px 20px;
+    font-size: 0.9em;
+  }
+  
+  .toast-notification {
+    bottom: 20px;
+    right: 20px;
+    left: 20px;
+    padding: 12px 16px;
+    font-size: 0.9em;
   }
 }
 </style>

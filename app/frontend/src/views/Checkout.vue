@@ -760,4 +760,49 @@ function goBack() {
     flex-direction: column;
   }
 }
+
+@media (max-width: 768px) {
+  .checkout-container {
+    padding: 20px 15px;
+  }
+  
+  .checkout-form,
+  .order-summary {
+    padding: 24px;
+  }
+  
+  h2 {
+    font-size: 1.5em;
+  }
+  
+  h3 {
+    font-size: 1.2em;
+  }
+}
+
+@media (max-width: 480px) {
+  .checkout-container {
+    padding: 15px 10px;
+  }
+  
+  .checkout-form,
+  .order-summary {
+    padding: 20px;
+  }
+  
+  .submit-btn {
+    padding: 12px 24px;
+    font-size: 0.95em;
+  }
+  
+  .order-item {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .item-image {
+    width: 100%;
+    max-width: 200px;
+  }
+}
 </style>

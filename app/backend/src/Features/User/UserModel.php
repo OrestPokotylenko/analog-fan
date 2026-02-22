@@ -154,7 +154,7 @@ class UserModel extends BaseModel {
                 new \DateTime($userData['created_at'])
             );
 
-            return $user->toArray();
+            return $user;
         }
 
         return null;

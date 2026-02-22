@@ -2,27 +2,27 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { isTokenExpired, clearAuthState } from '../services/authHelpers';
 
 const routes = [
-  { path: '/', component: () => import('../views/Home.vue') },
-  { path: '/login', component: () => import('../views/Login.vue') },
-  { path: '/signup', component: () => import('../views/Signup.vue') },
-  { path: '/reset-password', component: () => import('../views/ResetPassword.vue') },
-  { path: '/categories', component: () => import('../views/Categories.vue') },
-  { path: '/category/:typeName', component: () => import('../views/CategoryItems.vue') },
-  { path: '/item/:id', component: () => import('../views/ItemDetails.vue') },
-  { path: '/my-items', component: () => import('../views/SellingItems.vue') },
-  { path: '/my-items/upload', component: () => import('../views/UploadItem.vue') },
-  { path: '/my-items/:id', component: () => import('../views/EditItem.vue') },
-  { path: '/my-sales', component: () => import('../views/MySales.vue') },
-  { path: '/cart', component: () => import('../views/ShoppingCart.vue') },
-  { path: '/checkout', component: () => import('../views/Checkout.vue') },
-  { path: '/order-confirmation', component: () => import('../views/OrderConfirmation.vue') },
-  { path: '/orders', component: () => import('../views/Orders.vue') },
-  { path: '/orders/:id', component: () => import('../views/OrderDetails.vue') },
-  { path: '/profile', component: () => import('../views/Profile.vue') },
-  { path: '/wishlist', component: () => import('../views/Wishlist.vue') },
-  { path: '/messages', component: () => import('../views/Messages.vue') },
-  { path: '/messages/:conversationId', component: () => import('../views/Messages.vue') },
-  { path: '/admin', component: () => import('../views/Admin.vue') }
+  { path: '/', component: () => import('../views/home/Home.vue') },
+  { path: '/login', component: () => import('../views/auth/Login.vue') },
+  { path: '/signup', component: () => import('../views/auth/Signup.vue') },
+  { path: '/reset-password', component: () => import('../views/auth/ResetPassword.vue') },
+  { path: '/categories', component: () => import('../views/item/Categories.vue') },
+  { path: '/category/:typeName', component: () => import('../views/item/CategoryItems.vue') },
+  { path: '/item/:id', component: () => import('../views/item/ItemDetails.vue') },
+  { path: '/my-items', component: () => import('../views/sales/SellingItems.vue') },
+  { path: '/my-items/upload', component: () => import('../views/item/UploadItem.vue') },
+  { path: '/my-items/:id', component: () => import('../views/item/EditItem.vue') },
+  { path: '/my-sales', component: () => import('../views/sales/MySales.vue') },
+  { path: '/cart', component: () => import('../views/order/ShoppingCart.vue') },
+  { path: '/checkout', component: () => import('../views/order/Checkout.vue') },
+  { path: '/order-confirmation', component: () => import('../views/order/OrderConfirmation.vue') },
+  { path: '/orders', component: () => import('../views/order/Orders.vue') },
+  { path: '/orders/:id', component: () => import('../views/order/OrderDetails.vue') },
+  { path: '/profile', component: () => import('../views/user/Profile.vue') },
+  { path: '/wishlist', component: () => import('../views/wishlist/Wishlist.vue') },
+  { path: '/messages', component: () => import('../views/message/Messages.vue') },
+  { path: '/messages/:conversationId', component: () => import('../views/message/Messages.vue') },
+  { path: '/admin', component: () => import('../views/admin/Admin.vue') }
 ];
 
 const router = createRouter({

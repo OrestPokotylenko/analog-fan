@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import NotificationToast from './components/NotificationToast.vue';
+import NotificationToast from './components/common/NotificationToast.vue';
 import WebSocketService from './services/WebSocketService';
 import MessageService from './services/MessageService';
 
@@ -146,7 +146,6 @@ body {
   display: flex;
   flex-direction: column;
   height: 100%;
-  margin: 100px 50px;
 }
 
 /* Scrollbar Styling */

@@ -2,27 +2,27 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { isTokenExpired, clearAuthState } from '../services/authHelpers';
 
 const routes = [
-  { path: '/', component: () => import('../views/home/Home.vue') },
-  { path: '/login', component: () => import('../views/auth/Login.vue') },
-  { path: '/signup', component: () => import('../views/auth/Signup.vue') },
-  { path: '/reset-password', component: () => import('../views/auth/ResetPassword.vue') },
-  { path: '/categories', component: () => import('../views/item/Categories.vue') },
-  { path: '/category/:typeName', component: () => import('../views/item/CategoryItems.vue') },
-  { path: '/item/:id', component: () => import('../views/item/ItemDetails.vue') },
-  { path: '/my-items', component: () => import('../views/sales/SellingItems.vue') },
-  { path: '/my-items/upload', component: () => import('../views/item/UploadItem.vue') },
-  { path: '/my-items/:id', component: () => import('../views/item/EditItem.vue') },
-  { path: '/my-sales', component: () => import('../views/sales/MySales.vue') },
-  { path: '/cart', component: () => import('../views/order/ShoppingCart.vue') },
-  { path: '/checkout', component: () => import('../views/order/Checkout.vue') },
-  { path: '/order-confirmation', component: () => import('../views/order/OrderConfirmation.vue') },
-  { path: '/orders', component: () => import('../views/order/Orders.vue') },
-  { path: '/orders/:id', component: () => import('../views/order/OrderDetails.vue') },
-  { path: '/profile', component: () => import('../views/user/Profile.vue') },
-  { path: '/wishlist', component: () => import('../views/wishlist/Wishlist.vue') },
-  { path: '/messages', component: () => import('../views/message/Messages.vue') },
-  { path: '/messages/:conversationId', component: () => import('../views/message/Messages.vue') },
-  { path: '/admin', component: () => import('../views/admin/Admin.vue') }
+  { name: 'home', path: '/', component: () => import('../views/home/Home.vue') },
+  { name: 'login', path: '/login', component: () => import('../views/auth/Login.vue') },
+  { name: 'signup', path: '/signup', component: () => import('../views/auth/Signup.vue') },
+  { name: 'reset-password', path: '/reset-password', component: () => import('../views/auth/ResetPassword.vue') },
+  { name: 'categories', path: '/categories', component: () => import('../views/item/Categories.vue') },
+  { name: 'category-items', path: '/category/:typeName', component: () => import('../views/item/CategoryItems.vue') },
+  { name: 'item-details', path: '/item/:id', component: () => import('../views/item/ItemDetails.vue') },
+  { name: 'my-items', path: '/my-items', component: () => import('../views/sales/SellingItems.vue') },
+  { name: 'upload-item', path: '/my-items/upload', component: () => import('../views/item/UploadItem.vue') },
+  { name: 'edit-item', path: '/my-items/:id', component: () => import('../views/item/EditItem.vue') },
+  { name: 'my-sales', path: '/my-sales', component: () => import('../views/sales/MySales.vue') },
+  { name: 'cart', path: '/cart', component: () => import('../views/order/ShoppingCart.vue') },
+  { name: 'checkout', path: '/checkout', component: () => import('../views/order/Checkout.vue') },
+  { name: 'order-confirmation', path: '/order-confirmation', component: () => import('../views/order/OrderConfirmation.vue') },
+  { name: 'orders', path: '/orders', component: () => import('../views/order/Orders.vue') },
+  { name: 'order-details', path: '/orders/:id', component: () => import('../views/order/OrderDetails.vue') },
+  { name: 'profile', path: '/profile', component: () => import('../views/user/Profile.vue') },
+  { name: 'wishlist', path: '/wishlist', component: () => import('../views/wishlist/Wishlist.vue') },
+  { name: 'messages', path: '/messages', component: () => import('../views/message/Messages.vue') },
+  { name: 'conversation', path: '/messages/:conversationId', component: () => import('../views/message/Messages.vue') },
+  { name: 'admin', path: '/admin', component: () => import('../views/admin/Admin.vue') }
 ];
 
 const router = createRouter({

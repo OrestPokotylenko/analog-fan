@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import Header from '../../components/layout/Header.vue';
+import PageLayout from '../../components/layout/PageLayout.vue';
 import ItemCard from '../../components/common/ItemCard.vue';
 import axios from '../../services/axiosConfig';
 
@@ -94,9 +94,9 @@ onMounted(async () => {
 </script>
 
 <template>
-  <Header />
+  <PageLayout>
   <div class="categories-page">
-    <div class="container">
+    <div class="container container-lg">
       <div class="page-header">
         <h1 class="page-title">
           {{ searchTerm ? `Search results for "${searchTerm}"` : 'Browse Categories' }}
@@ -161,19 +161,15 @@ onMounted(async () => {
       </div>
     </div>
   </div>
+  </PageLayout>
 </template>
 
 <style scoped>
 .categories-page {
-  padding-top: 70px;
-  background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
-  min-height: 100vh;
   padding-bottom: 50px;
 }
 
 .container {
-  max-width: 1200px;
-  margin: 0 auto;
   padding: 40px 30px;
 }
 

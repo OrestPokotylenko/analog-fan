@@ -1,9 +1,11 @@
 <script setup>
 import { ref, onMounted, inject } from 'vue';
 import { useRouter } from 'vue-router';
-import Header from '../../components/layout/Header.vue';
+import PageLayout from '../../components/layout/PageLayout.vue';
+import LoadingSpinner from '../../components/ui/LoadingSpinner.vue';
 import axios from '../../services/axiosConfig';
 import { isTokenExpired, clearAuthState } from '../../services/authHelpers';
+import { useToast } from '../../composables/useToast';
 
 const router = useRouter();
 const $auth = inject('$auth');
@@ -13,6 +15,14 @@ const shipments = ref([]);
 const isLoading = ref(true);
 const testingStatus = ref({});
 const selectedTestStatus = ref({});
+const toastType = ref('success');
+
+const { toastVisible, toastMessage, showToast: _showToast } = useToast();
+
+function showToast(message, type = 'success') {
+  toastType.value = type;
+  _showToast(message, 3500);
+}
 
 const statusColors = {
   pending: '#f59e0b',
@@ -100,7 +110,7 @@ function trackShipment(trackingUrl) {
 async function testStatusChange(shipment) {
   const newStatus = selectedTestStatus.value[shipment.id];
   if (!newStatus) {
-    alert('Please select a status first');
+    showToast('Please select a status first', 'error');
     return;
   }
   
@@ -116,10 +126,10 @@ async function testStatusChange(shipment) {
     // Reload data to see the change
     await loadData();
     
-    alert(`✅ Status updated to: ${newStatus}`);
+    showToast(`Status updated to: ${newStatus}`, 'success');
   } catch (error) {
     console.error('Failed to update status:', error);
-    alert('Failed to update status: ' + (error.response?.data?.error || error.message));
+    showToast('Failed to update status: ' + (error.response?.data?.error || error.message), 'error');
   } finally {
     testingStatus.value[shipment.id] = false;
   }
@@ -127,17 +137,19 @@ async function testStatusChange(shipment) {
 </script>
 
 <template>
-  <Header />
+  <PageLayout>
+  <Transition name="toast">
+    <div v-if="toastVisible" class="toast-notification" :class="toastType">
+      {{ toastMessage }}
+    </div>
+  </Transition>
   <div class="my-sales-page">
     <div class="sales-header">
       <h1>📦 My Sales</h1>
       <p class="subtitle">Track shipments for items you've sold</p>
     </div>
 
-    <div v-if="isLoading" class="loading">
-      <div class="spinner"></div>
-      <p>Loading your sales...</p>
-    </div>
+    <LoadingSpinner v-if="isLoading" message="Loading your sales..." />
 
     <div v-else class="sales-content">
       <!-- Shipments -->
@@ -227,12 +239,11 @@ async function testStatusChange(shipment) {
       </div>
     </div>
   </div>
+  </PageLayout>
 </template>
 
 <style scoped>
 .my-sales-page {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1e 100%);
   padding: 20px;
   color: white;
 }
@@ -255,28 +266,6 @@ async function testStatusChange(shipment) {
 .subtitle {
   color: #a0a0a0;
   font-size: 1.1rem;
-}
-
-.loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
-}
-
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid rgba(255, 255, 255, 0.1);
-  border-top-color: #667eea;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 20px;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }
 
 .sales-content {
@@ -497,6 +486,38 @@ async function testStatusChange(shipment) {
 .btn-test:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.toast-notification {
+  position: fixed;
+  top: 90px;
+  bottom: auto;
+  right: 24px;
+  padding: 14px 22px;
+  border-radius: 10px;
+  color: white;
+  font-weight: 600;
+  font-size: 0.95rem;
+  z-index: 9999;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  background: none;
+}
+
+.toast-notification.success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.toast-notification.error {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.toast-enter-active, .toast-leave-active {
+  transition: all 0.3s ease;
+}
+
+.toast-enter-from, .toast-leave-to {
+  opacity: 0;
+  transform: translateX(60px);
 }
 
 @media (max-width: 768px) {

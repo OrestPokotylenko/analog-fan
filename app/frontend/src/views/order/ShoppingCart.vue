@@ -1,7 +1,7 @@
 <template>
-  <Header />
+  <PageLayout>
   <div class="cart-page">
-    <div class="container">
+    <div class="container container-lg">
       <div class="cart-header">
         <div class="header-content">
           <div>
@@ -89,27 +89,29 @@
       </div>
     </Transition>
   </div>
+  </PageLayout>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import CartService from '../../services/CartService';
-import Header from '../../components/layout/Header.vue';
+import PageLayout from '../../components/layout/PageLayout.vue';
 import CartItem from '../../components/cart/CartItem.vue';
 import CartSummary from '../../components/cart/CartSummary.vue';
 import { isTokenExpired, clearAuthState } from '../../services/authHelpers';
+import { useToast } from '../../composables/useToast';
 
 const router = useRouter();
 const $auth = inject('$auth');
 const cartItems = ref([]);
 const shipping = ref(5.99);
 const userCart = ref(null);
-const showNotification = ref(false);
-const notificationMessage = ref('');
 const showConfirmDialog = ref(false);
 const isRemoving = ref(false);
 const isClearing = ref(false);
+
+const { toastVisible: showNotification, toastMessage: notificationMessage, showToast } = useToast();
 
 onMounted(() => {
   // Check token expiration immediately
@@ -155,14 +157,6 @@ async function removeFromCart(cartItemId) {
   }
 }
 
-function showToast(message, duration = 3000) {
-  notificationMessage.value = message;
-  showNotification.value = true;
-  setTimeout(() => {
-    showNotification.value = false;
-  }, duration);
-}
-
 async function clearCart() {
   if (!userCart.value) return;
   showConfirmDialog.value = true;
@@ -205,15 +199,10 @@ const total = computed(() => {
 
 <style scoped>
 .cart-page {
-  padding-top: 70px;
-  background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
-  min-height: 100vh;
   padding-bottom: 60px;
 }
 
 .container {
-  max-width: 1200px;
-  margin: 0 auto;
   padding: 40px 30px;
 }
 
@@ -256,34 +245,6 @@ const total = computed(() => {
   background: #ff4757;
   color: white;
   transform: translateY(-2px);
-}
-
-.toast-notification {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  background: linear-gradient(135deg, #e94560 0%, #ff6b81 100%);
-  color: white;
-  padding: 16px 24px;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(233, 69, 96, 0.4);
-  z-index: 10000;
-  font-weight: 600;
-  animation: slideIn 0.3s ease;
-}
-
-.toast-enter-active, .toast-leave-active {
-  transition: all 0.3s ease;
-}
-
-.toast-enter-from {
-  transform: translateX(400px);
-  opacity: 0;
-}
-
-.toast-leave-to {
-  transform: translateY(50px);
-  opacity: 0;
 }
 
 .modal-overlay {

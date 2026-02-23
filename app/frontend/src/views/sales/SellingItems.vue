@@ -1,13 +1,13 @@
 <script setup>
-import Header from '../../components/layout/Header.vue';
+import PageLayout from '../../components/layout/PageLayout.vue';
 import MyItemList from '../../components/items/MyItemsList.vue';
 </script>
 
 <template>
-  <Header />
+  <PageLayout>
   <div class="page">
     <section class="content">
-      <div class="container">
+      <div class="container container-xl">
         <div class="section-header">
           <div class="section-titles">
             <h2 class="section-title">My Items</h2>
@@ -22,22 +22,16 @@ import MyItemList from '../../components/items/MyItemsList.vue';
       </div>
     </section>
   </div>
+  </PageLayout>
 </template>
 
 <style scoped>
 .page {
-  background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
-  min-height: 100vh;
-  padding-top: 66px;
+  padding-top: 4px;
 }
 
 .content {
   padding: 60px 30px;
-}
-
-.container {
-  max-width: 1400px;
-  margin: 0 auto;
 }
 
 .section-header {

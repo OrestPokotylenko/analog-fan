@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, inject } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import Header from '../../components/layout/Header.vue';
+import PageLayout from '../../components/layout/PageLayout.vue';
 import LoadingSpinner from '../../components/ui/LoadingSpinner.vue';
 import EmptyState from '../../components/ui/EmptyState.vue';
 import AlertMessage from '../../components/ui/AlertMessage.vue';
@@ -142,10 +142,10 @@ function viewOrderDetails(orderId) {
 </script>
 
 <template>
+  <PageLayout>
   <div class="orders-page">
-    <Header />
     
-    <div class="container">
+    <div class="container container-lg">
       <div class="orders-header">
         <h1>My Orders</h1>
         <p class="subtitle">View and track your orders</p>
@@ -179,19 +179,15 @@ function viewOrderDetails(orderId) {
       </div>
     </div>
   </div>
+  </PageLayout>
 </template>
 
 <style scoped>
 .orders-page {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
-  padding-top: 80px;
   padding-bottom: 3rem;
 }
 
 .container {
-  max-width: 1200px;
-  margin: 0 auto;
   padding: 2rem 1rem;
 }
 

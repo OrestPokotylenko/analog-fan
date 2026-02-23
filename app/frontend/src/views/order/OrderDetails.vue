@@ -2,6 +2,7 @@
 import { ref, onMounted, inject, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import Header from '../../components/layout/Header.vue';
+import LoadingSpinner from '../../components/ui/LoadingSpinner.vue';
 import OrderService from '../../services/OrderService';
 import axios from '../../services/axiosConfig';
 import { isTokenExpired, clearAuthState } from '../../services/authHelpers';
@@ -82,15 +83,12 @@ function goBack() {
   <div class="order-details-page" :class="{ 'admin-view': isAdmin }">
     <Header v-if="!isAdmin" />
 
-    <div class="container">
+    <div class="container container-detail">
       <button class="btn-back" @click="goBack">
         ← Back to {{ isAdmin ? 'Admin Panel' : 'Orders' }}
       </button>
 
-      <div v-if="isLoading" class="loading">
-        <div class="spinner"></div>
-        <p>Loading order details...</p>
-      </div>
+      <LoadingSpinner v-if="isLoading" message="Loading order details..." />
 
       <div v-else-if="errorMessage" class="error-message">{{ errorMessage }}</div>
 
@@ -238,9 +236,11 @@ function goBack() {
 .order-details-page.admin-view { padding-top: 2rem; }
 
 .container {
-  max-width: 1100px;
-  margin: 0 auto;
   padding: 2rem 20px;
+}
+
+.container-detail {
+  max-width: 1100px;
 }
 
 /* ── Back button ── */
@@ -260,16 +260,6 @@ function goBack() {
 .btn-back:hover { background: rgba(255,255,255,0.13); transform: translateX(-4px); }
 
 /* ── Loading / error ── */
-.loading { text-align: center; padding: 3rem; color: rgba(255,255,255,0.6); }
-.spinner {
-  width: 48px; height: 48px;
-  border: 4px solid rgba(255,255,255,0.15);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 0.9s linear infinite;
-  margin: 0 auto 1rem;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
 .error-message { background: rgba(239,68,68,0.1); border: 1px solid #ef4444; border-radius: 10px; padding: 1.5rem; color: #ef4444; text-align: center; }
 
 /* ── Order details wrapper ── */

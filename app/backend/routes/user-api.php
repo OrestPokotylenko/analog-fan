@@ -64,8 +64,9 @@ Route::add('/api/users/{id}', function($id) use ($userController) {
 }, 'put');
 
 Route::add('/api/authenticate', function () use ($userController) {
-    $username = $_GET['username'];
-    $password = $_GET['password'];
+    $body = json_decode(file_get_contents('php://input'), true);
+    $username = $body['username'] ?? '';
+    $password = $body['password'] ?? '';
 
     $result = $userController->authenticateUser($username, $password);
     
@@ -74,7 +75,7 @@ Route::add('/api/authenticate', function () use ($userController) {
     } else {
         echo json_encode(['success' => false, 'message' => 'Invalid username or password']);
     }
-}, 'get');
+}, 'post');
 
 Route::add('/api/protected', function () use ($jwtService) {
     $headers = getallheaders();

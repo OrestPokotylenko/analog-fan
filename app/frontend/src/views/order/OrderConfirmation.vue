@@ -1,7 +1,8 @@
 <script setup>
 import { ref, onMounted, inject } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import Header from '../../components/layout/Header.vue';
+import PageLayout from '../../components/layout/PageLayout.vue';
+import LoadingSpinner from '../../components/ui/LoadingSpinner.vue';
 import OrderService from '../../services/OrderService';
 import PaymentService from '../../services/PaymentService';
 import CartService from '../../services/CartService';
@@ -124,14 +125,11 @@ function goToOrders() {
 </script>
 
 <template>
+  <PageLayout>
   <div class="order-confirmation-page">
-    <Header />
     
-    <div class="container">
-      <div v-if="isLoading" class="loading">
-        <div class="spinner"></div>
-        <p>Processing your order...</p>
-      </div>
+    <div class="container container-sm">
+      <LoadingSpinner v-if="isLoading" message="Processing your order..." />
 
       <div v-else-if="errorMessage" class="error-state">
         <div class="error-icon">⚠️</div>
@@ -241,40 +239,16 @@ function goToOrders() {
       </div>
     </div>
   </div>
+  </PageLayout>
 </template>
 
 <style scoped>
 .order-confirmation-page {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
   padding-bottom: 4rem;
-  padding-top: 70px;
 }
 
 .container {
-  max-width: 800px;
-  margin: 0 auto;
   padding: 2rem 1rem;
-}
-
-.loading {
-  text-align: center;
-  padding: 4rem 2rem;
-  color: white;
-}
-
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 1rem;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }
 
 .error-state, .success-state {

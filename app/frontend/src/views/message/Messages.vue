@@ -18,6 +18,7 @@ const messages = ref([]);
 const newMessage = ref('');
 const isLoading = ref(false);
 const isSending = ref(false);
+const sendError = ref('');
 const messagesEndRef = ref(null);
 const previousMessageCount = ref(0);
 
@@ -203,7 +204,8 @@ async function sendMessage() {
     }
   } catch (error) {
     console.error('Failed to send message:', error);
-    alert('Failed to send message. Make sure WebSocket is connected.');
+    sendError.value = 'Failed to send message. Make sure you are connected.';
+    setTimeout(() => { sendError.value = ''; }, 4000);
   } finally {
     isSending.value = false;
   }
@@ -344,6 +346,7 @@ const selectedConversationUser = computed(() => {
 
           <!-- Message Input -->
           <div class="message-input-container">
+            <p v-if="sendError" class="send-error">{{ sendError }}</p>
             <form @submit.prevent="sendMessage" class="message-form">
               <input 
                 v-model="newMessage" 
@@ -652,6 +655,12 @@ const selectedConversationUser = computed(() => {
   padding: 16px 20px;
   background: #16213e;
   border-top: 1px solid #0f3460;
+}
+
+.send-error {
+  color: #ff6b7a;
+  font-size: 0.85em;
+  margin: 0 0 8px 0;
 }
 
 .message-form {

@@ -66,40 +66,36 @@ Route::add('/api/product-types', function () use ($productTypeController) {
 
 Route::add('/api/product-types', function () use ($productTypeController) {
     $name = $_POST['name'] ?? null;
+    $supportsGenre = isset($_POST['supports_genre']) ? (bool)$_POST['supports_genre'] : false;
     if (!$name) {
         http_response_code(400);
         echo json_encode(['error' => 'Name is required']);
         return;
     }
-    $productTypeController->postProductType($name);
+    $productTypeController->postProductType($name, $supportsGenre);
 }, 'post');
 
 Route::add('/api/product-types/{id}', function ($id) use ($productTypeController) {
     global $_PUT, $_PUT_FILES;
-    
     parsePutFormData();
-    
-    // Check if we have FormData (multipart) or JSON
     $name = $_PUT['name'] ?? null;
-    
+    $supportsGenre = isset($_PUT['supports_genre']) ? (bool)$_PUT['supports_genre'] : false;
     // If no FormData, try JSON body
     if (!$name) {
         $data = json_decode(file_get_contents('php://input'), true);
         $name = $data['name'] ?? null;
+        $supportsGenre = isset($data['supports_genre']) ? (bool)$data['supports_genre'] : false;
     }
-    
     if (!$name) {
         http_response_code(400);
         echo json_encode(['error' => 'Name is required']);
         return;
     }
-    
     // Handle file from FormData if present
     if (isset($_PUT_FILES['image'])) {
         $_FILES['image'] = $_PUT_FILES['image'];
     }
-    
-    $productTypeController->updateProductType((int)$id, $name);
+    $productTypeController->updateProductType((int)$id, $name, $supportsGenre);
 }, 'put');
 
 Route::add('/api/product-types/{id}', function ($id) use ($productTypeController) {

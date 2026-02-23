@@ -31,21 +31,18 @@ class ProductTypeController {
         }
     }
 
-    public function postProductType($name) {
+    public function postProductType($name, $supportsGenre = false) {
         $imageUrl = null;
-        
         // Handle image upload if provided
         if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
             $imageUrl = $this->cloudinary->uploadImage($_FILES['image']['tmp_name']);
         }
-        
-        $newProductType = $this->model->postProductType($name, $imageUrl);
+        $newProductType = $this->model->postProductType($name, $imageUrl, $supportsGenre);
         echo json_encode(ProductTypeDto::toDTO($newProductType)->toArray());
     }
 
-    public function updateProductType(int $productTypeId, $name) {
+    public function updateProductType(int $productTypeId, $name, $supportsGenre = false) {
         $imageUrl = null;
-        
         // Handle image upload if provided
         if (isset($_FILES['image']) && file_exists($_FILES['image']['tmp_name'])) {
             // Get existing product type to delete old image if exists
@@ -53,11 +50,9 @@ class ProductTypeController {
             if ($existingType && $existingType['image_url']) {
                 $this->cloudinary->deleteImage($existingType['image_url']);
             }
-            
             $imageUrl = $this->cloudinary->uploadImage($_FILES['image']['tmp_name']);
         }
-        
-        $updatedProductType = $this->model->updateProductType($productTypeId, $name, $imageUrl);
+        $updatedProductType = $this->model->updateProductType($productTypeId, $name, $imageUrl, $supportsGenre);
         if ($updatedProductType) {
             echo json_encode(ProductTypeDto::toDTO($updatedProductType)->toArray());
         } else {

@@ -37,6 +37,7 @@ const editingType = ref(null);
 const typeFormName = ref('');
 const typeFormImage = ref(null);
 const imagePreview = ref(null);
+const typeFormSupportsGenre = ref(false);
 
 const showConfirmModal = ref(false);
 const confirmTitle = ref('');
@@ -129,9 +130,30 @@ function refundOrder(order) {
   });
 }
 
-function openCreateTypeModal() { editingType.value = null; typeFormName.value = ''; typeFormImage.value = null; imagePreview.value = null; showTypeModal.value = true; }
-function openEditTypeModal(type) { editingType.value = type; typeFormName.value = type.typeName; typeFormImage.value = null; imagePreview.value = type.imageUrl || null; showTypeModal.value = true; }
-function closeTypeModal() { showTypeModal.value = false; editingType.value = null; typeFormName.value = ''; typeFormImage.value = null; imagePreview.value = null; }
+function openCreateTypeModal() {
+  editingType.value = null;
+  typeFormName.value = '';
+  typeFormImage.value = null;
+  imagePreview.value = null;
+  typeFormSupportsGenre.value = false;
+  showTypeModal.value = true;
+}
+function openEditTypeModal(type) {
+  editingType.value = type;
+  typeFormName.value = type.typeName;
+  typeFormImage.value = null;
+  imagePreview.value = type.imageUrl || null;
+  typeFormSupportsGenre.value = !!type.supportsGenre;
+  showTypeModal.value = true;
+}
+function closeTypeModal() {
+  showTypeModal.value = false;
+  editingType.value = null;
+  typeFormName.value = '';
+  typeFormImage.value = null;
+  imagePreview.value = null;
+  typeFormSupportsGenre.value = false;
+}
 
 function handleImageChange(e) {
   const file = e.target.files[0];
@@ -144,6 +166,7 @@ async function saveProductType() {
     isSavingType.value = true;
     const fd = new FormData();
     fd.append('name', typeFormName.value);
+    fd.append('supports_genre', typeFormSupportsGenre.value ? '1' : '0');
     if (typeFormImage.value) fd.append('image', typeFormImage.value);
     const cfg = { headers: { 'Content-Type': 'multipart/form-data' } };
     if (editingType.value) await axios.put(`/product-types/${editingType.value.productTypeId}`, fd, cfg);
@@ -191,6 +214,11 @@ function logout() {
         <label>Type Image</label>
         <input type="file" accept="image/*" class="form-input" @change="handleImageChange" />
         <div v-if="imagePreview" class="image-preview"><img :src="imagePreview" alt="Preview" /></div>
+      </div>
+      <div class="form-group">
+        <label>
+          <input type="checkbox" v-model="typeFormSupportsGenre" /> Supports Genre
+        </label>
       </div>
       <template #footer>
         <button class="btn-secondary" :disabled="isSavingType" @click="closeTypeModal">Cancel</button>

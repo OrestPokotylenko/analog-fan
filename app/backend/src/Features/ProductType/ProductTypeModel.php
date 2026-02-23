@@ -21,22 +21,22 @@ class ProductTypeModel extends BaseModel {
         return $row ? $this->normalizeRow($row) : null;
     }
 
-    public function postProductType($name, $imageUrl) {
-        $sql = "INSERT INTO {$this->table} (name, image_url) VALUES (?, ?)";
+    public function postProductType($name, $imageUrl, $supportsGenre = false) {
+        $sql = "INSERT INTO {$this->table} (name, image_url, supports_genre) VALUES (?, ?, ?)";
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$name, $imageUrl]);
+        $stmt->execute([$name, $imageUrl, $supportsGenre ? 1 : 0]);
         return $this->fetchProductTypeById((int)$this->pdo->lastInsertId());
     }
 
-    public function updateProductType(int $productTypeId, $name, $imageUrl = null) {
+    public function updateProductType(int $productTypeId, $name, $imageUrl = null, $supportsGenre = false) {
         if ($imageUrl !== null) {
-            $sql = "UPDATE {$this->table} SET name = ?, image_url = ? WHERE product_type_id = ?";
+            $sql = "UPDATE {$this->table} SET name = ?, image_url = ?, supports_genre = ? WHERE product_type_id = ?";
             $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([$name, $imageUrl, $productTypeId]);
+            $stmt->execute([$name, $imageUrl, $supportsGenre ? 1 : 0, $productTypeId]);
         } else {
-            $sql = "UPDATE {$this->table} SET name = ? WHERE product_type_id = ?";
+            $sql = "UPDATE {$this->table} SET name = ?, supports_genre = ? WHERE product_type_id = ?";
             $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([$name, $productTypeId]);
+            $stmt->execute([$name, $supportsGenre ? 1 : 0, $productTypeId]);
         }
         return $this->fetchProductTypeById($productTypeId);
     }

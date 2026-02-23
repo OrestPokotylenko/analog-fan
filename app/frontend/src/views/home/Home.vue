@@ -4,13 +4,20 @@ import axios from '../../services/axiosConfig';
 import Header from '../../components/layout/Header.vue';
 import ItemsGrid from '../../components/ui/ItemsGrid.vue';
 import ItemCard from '../../components/common/ItemCard.vue';
+import FilterPanel from '../../components/items/FilterPanel.vue';
+import { useItemFilters } from '../../composables/useItemFilters';
 
 const items = ref([]);
 const likedItems = ref([]);
+const productTypes = ref([]);
+
+const {
+  minPrice, maxPrice, selectedConditions, selectedTypes,
+  sortOrder, filteredItems, activeFilterCount, clearFilters,
+} = useItemFilters(items);
 
 onMounted(async () => {
-  await fetchItems();
-  await fetchLikedItems();
+  await Promise.all([fetchItems(), fetchLikedItems(), fetchProductTypes()]);
 });
 
 async function fetchItems() {
@@ -19,6 +26,15 @@ async function fetchItems() {
     items.value = response.data;
   } catch (error) {
     console.error('Failed to fetch items:', error);
+  }
+}
+
+async function fetchProductTypes() {
+  try {
+    const response = await axios.get('/product-types');
+    productTypes.value = Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error('Failed to fetch product types:', error);
   }
 }
 
@@ -47,14 +63,32 @@ async function fetchLikedItems() {
     <section class="featured">
       <div class="container container-xl">
         <div class="section-header">
-          <h2 class="section-title">Featured Items</h2>
-          <p class="section-subtitle">Explore our latest collection</p>
+          <div>
+            <h2 class="section-title">Featured Items</h2>
+            <p class="section-subtitle">Explore our latest collection</p>
+          </div>
+          <p v-if="activeFilterCount" class="result-count">
+            {{ filteredItems.length }} of {{ items.length }} items
+          </p>
         </div>
+
+        <FilterPanel
+          v-model:minPrice="minPrice"
+          v-model:maxPrice="maxPrice"
+          v-model:selectedConditions="selectedConditions"
+          v-model:selectedTypes="selectedTypes"
+          v-model:sortOrder="sortOrder"
+          :productTypes="productTypes"
+          :showTypeFilter="true"
+          :activeFilterCount="activeFilterCount"
+          @clear="clearFilters"
+        />
+
         <ItemsGrid
-          :items="items"
+          :items="filteredItems"
           :liked-items="likedItems"
           :card-component="ItemCard"
-          empty-message="No items available yet."
+          :empty-message="activeFilterCount ? 'No items match your filters.' : 'No items available yet.'"
         />
       </div>
     </section>
@@ -100,15 +134,19 @@ async function fetchLikedItems() {
 }
 
 .section-header {
-  text-align: center;
-  margin-bottom: 60px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
 }
 
 .section-title {
   font-size: 2.8em;
   color: white;
   font-weight: 800;
-  margin: 0 0 15px 0;
+  margin: 0 0 8px 0;
   letter-spacing: -0.5px;
 }
 
@@ -116,6 +154,13 @@ async function fetchLikedItems() {
   font-size: 1.1em;
   color: #b0b0b0;
   margin: 0;
+}
+
+.result-count {
+  color: #b0b0b0;
+  font-size: 0.9em;
+  margin: 0;
+  align-self: flex-end;
 }
 
 @media (max-width: 768px) {

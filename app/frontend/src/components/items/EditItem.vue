@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from '../../services/axiosConfig';
 
@@ -18,6 +18,26 @@ const isUpdating = ref(false);
 const isDeletingImage = ref(false);
 const isDeletingItem = ref(false);
 const isConfirming = ref(false);
+
+const isMusicType = computed(() => {
+  if (!item.value) return false;
+  const selected = productTypes.value.find(t => t.productTypeId === item.value.productTypeId);
+  return selected?.supportsGenre ?? false;
+});
+
+const CONDITIONS = [
+  { value: 'new',      label: 'New / Sealed' },
+  { value: 'like_new', label: 'Like New' },
+  { value: 'good',     label: 'Good' },
+  { value: 'fair',     label: 'Fair' },
+  { value: 'poor',     label: 'Poor' },
+];
+
+const GENRES = [
+  'Rock', 'Pop', 'Jazz', 'Classical', 'Hip-Hop', 'Electronic',
+  'Folk', 'Country', 'R&B', 'Metal', 'Punk', 'Alternative',
+  'Blues', 'Reggae', 'Soul', 'Funk', 'World', 'Latin', 'Other',
+];
 
 onMounted(async () => {
   await Promise.all([fetchItem(), fetchProductTypes()]);
@@ -64,6 +84,10 @@ async function updateItem() {
     formData.append('price', String(item.value.price ?? 0));
     formData.append('type', String(item.value.productTypeId ?? ''));
     formData.append('quantity', String(item.value.quantity ?? 1));
+    formData.append('condition', String(item.value.condition ?? 'good'));
+    if (isMusicType.value && item.value.genre) {
+      formData.append('genre', item.value.genre);
+    }
 
     if (item.value.imagesPath && item.value.imagesPath.length > 0) {
       item.value.imagesPath.forEach((img) => {
@@ -241,6 +265,23 @@ function closeConfirmModal() {
           <option v-for="type in productTypes" :key="type.productTypeId" :value="type.productTypeId">
             {{ type.typeName }}
           </option>
+        </select>
+      </div>
+
+      <!-- Condition -->
+      <div class="form-group">
+        <label class="form-label">Condition *</label>
+        <select v-model="item.condition" class="form-select" required>
+          <option v-for="c in CONDITIONS" :key="c.value" :value="c.value">{{ c.label }}</option>
+        </select>
+      </div>
+
+      <!-- Genre (music types only) -->
+      <div v-if="isMusicType" class="form-group">
+        <label class="form-label">Genre</label>
+        <select v-model="item.genre" class="form-select">
+          <option value="">None</option>
+          <option v-for="g in GENRES" :key="g" :value="g">{{ g }}</option>
         </select>
       </div>
 

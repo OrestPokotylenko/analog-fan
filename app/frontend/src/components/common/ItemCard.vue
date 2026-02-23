@@ -1,6 +1,14 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
+
+const CONDITION_LABELS = {
+  new:      'New',
+  like_new: 'Like New',
+  good:     'Good',
+  fair:     'Fair',
+  poor:     'Poor',
+};
 import likeFilled from '../../assets/like-filled.svg';
 import likeUnfilled from '../../assets/like-unfilled.svg';
 import axios from '../../services/axiosConfig';
@@ -58,9 +66,15 @@ async function deleteLikedItem(userId) {
         </button>
       </template>
 
-      <!-- Type label under the title -->
+      <!-- Type + condition/genre under the title -->
       <template #subtitle>
         <p class="card-type">{{ item.type }}</p>
+        <div class="card-badges">
+          <span v-if="item.condition" class="badge condition-badge" :data-condition="item.condition">
+            {{ CONDITION_LABELS[item.condition] ?? item.condition }}
+          </span>
+          <span v-if="item.genre" class="badge genre-badge">{{ item.genre }}</span>
+        </div>
       </template>
     </BaseCard>
 
@@ -109,5 +123,33 @@ async function deleteLikedItem(userId) {
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+.card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.7em;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.condition-badge[data-condition="new"]      { background: rgba(16,185,129,0.15); color: #10b981; }
+.condition-badge[data-condition="like_new"] { background: rgba(59,130,246,0.15); color: #60a5fa; }
+.condition-badge[data-condition="good"]     { background: rgba(234,179, 8,0.15); color: #facc15; }
+.condition-badge[data-condition="fair"]     { background: rgba(249,115,22,0.15); color: #fb923c; }
+.condition-badge[data-condition="poor"]     { background: rgba(239, 68,68,0.15); color: #f87171; }
+
+.genre-badge {
+  background: rgba(233, 69, 96, 0.1);
+  color: #e94560;
 }
 </style>

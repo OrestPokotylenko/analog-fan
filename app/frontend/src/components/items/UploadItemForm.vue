@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import axios from '../../services/axiosConfig';
 import { useRouter } from 'vue-router';
 import { FormInput } from '../ui';
@@ -11,11 +11,36 @@ const description = ref('');
 const price = ref('');
 const quantity = ref('1');
 const type = ref('');
+const condition = ref('good');
+const genre = ref('');
 const productTypes = ref([]);
 const isLoadingTypes = ref(false);
 const isSubmitting = ref(false);
 const formError = ref('');
 const imageError = ref('');
+
+const isMusicType = computed(() => {
+  const selected = productTypes.value.find(t => t.productTypeId === type.value);
+  return selected?.supportsGenre ?? false;
+});
+
+watch(type, () => {
+  genre.value = '';
+});
+
+const CONDITIONS = [
+  { value: 'new',      label: 'New / Sealed' },
+  { value: 'like_new', label: 'Like New' },
+  { value: 'good',     label: 'Good' },
+  { value: 'fair',     label: 'Fair' },
+  { value: 'poor',     label: 'Poor' },
+];
+
+const GENRES = [
+  'Rock', 'Pop', 'Jazz', 'Classical', 'Hip-Hop', 'Electronic',
+  'Folk', 'Country', 'R&B', 'Metal', 'Punk', 'Alternative',
+  'Blues', 'Reggae', 'Soul', 'Funk', 'World', 'Latin', 'Other',
+];
 
 const router = useRouter();
 
@@ -55,6 +80,10 @@ async function handleSubmit() {
         formData.append('price', price.value);
         formData.append('type', type.value);
         formData.append('quantity', quantity.value);
+        formData.append('condition', condition.value);
+        if (isMusicType.value && genre.value) {
+            formData.append('genre', genre.value);
+        }
 
         if (images.value && images.value.length > 0) {
             images.value.forEach((image) => {
@@ -84,6 +113,8 @@ async function postItem(data) {
             price.value = '';
             quantity.value = '1';
             type.value = '';
+            condition.value = 'good';
+            genre.value = '';
 
             router.push('/my-items');
         }
@@ -189,6 +220,21 @@ function validateQuantity() {
                     <option v-for="t in productTypes" :key="t.productTypeId" :value="t.productTypeId">
                         {{ t.typeName }}
                     </option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="condition" class="form-label">Condition *</label>
+                <select id="condition" v-model="condition" class="form-select" required>
+                    <option v-for="c in CONDITIONS" :key="c.value" :value="c.value">{{ c.label }}</option>
+                </select>
+            </div>
+
+            <div v-if="isMusicType" class="form-group">
+                <label for="genre" class="form-label">Genre</label>
+                <select id="genre" v-model="genre" class="form-select">
+                    <option value="">Select genre (optional)</option>
+                    <option v-for="g in GENRES" :key="g" :value="g">{{ g }}</option>
                 </select>
             </div>
 

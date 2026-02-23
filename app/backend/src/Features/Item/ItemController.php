@@ -30,7 +30,7 @@ class ItemController {
         return $this->itemModel->fetchUserItems($userId);
     }
 
-    public function postItem($userId, $title, $description, $price, $type, $files, $quantity = 1) {
+    public function postItem($userId, $title, $description, $price, $type, $files, $quantity = 1, $condition = 'good', $genre = null) {
         if (empty($title) || $price <= 0 || empty($type)) {
             throw new Exception('Missing required fields', 400);
         }
@@ -39,21 +39,31 @@ class ItemController {
             throw new Exception('Quantity must be at least 1', 400);
         }
 
+        $validConditions = ['new', 'like_new', 'good', 'fair', 'poor'];
+        if (!in_array($condition, $validConditions)) {
+            $condition = 'good';
+        }
+
         $imagesPath = [];
         if ($files && !empty($files['tmp_name'][0])) {
             $imagesPath = $this->uploadImages($files);
         }
 
-        return $this->itemModel->postItem($userId, $title, $description, $price, $type, $imagesPath, $quantity);
+        return $this->itemModel->postItem($userId, $title, $description, $price, $type, $imagesPath, $quantity, $condition, $genre ?: null);
     }
 
-    public function updateItemWithFiles($id, $userId, $title, $description, $price, $type, $files, $existingImages = [], $quantity = null) {
+    public function updateItemWithFiles($id, $userId, $title, $description, $price, $type, $files, $existingImages = [], $quantity = null, $condition = null, $genre = null) {
         if (empty($title) || $price <= 0 || empty($type)) {
             throw new Exception('Missing required fields', 400);
         }
 
         if ($quantity !== null && $quantity < 1) {
             throw new Exception('Quantity must be at least 1', 400);
+        }
+
+        $validConditions = ['new', 'like_new', 'good', 'fair', 'poor'];
+        if ($condition !== null && !in_array($condition, $validConditions)) {
+            $condition = 'good';
         }
 
         $newImages = [];
@@ -65,15 +75,15 @@ class ItemController {
 
         $allImages = array_merge($existingImages, $newImages);
         error_log('Total images: ' . count($allImages) . ' - ' . json_encode($allImages));
-        
-        return $this->itemModel->updateItem($id, $userId, $title, $description, $price, $type, $allImages, $quantity);
+
+        return $this->itemModel->updateItem($id, $userId, $title, $description, $price, $type, $allImages, $quantity, $condition, $genre ?: null);
     }
 
-    public function updateItem($id, $userId, $title, $description, $price, $type, $imagesPath = [], $quantity = null) {
+    public function updateItem($id, $userId, $title, $description, $price, $type, $imagesPath = [], $quantity = null, $condition = null, $genre = null) {
         if (!is_array($imagesPath)) {
             $imagesPath = [];
         }
-        return $this->itemModel->updateItem($id, $userId, $title, $description, $price, $type, $imagesPath, $quantity);
+        return $this->itemModel->updateItem($id, $userId, $title, $description, $price, $type, $imagesPath, $quantity, $condition, $genre ?: null);
     }
 
     public function deleteItem($id, $userId) {
@@ -116,12 +126,19 @@ class ItemController {
         unset($images[$imageIndex]);
         $images = array_values($images);
 
-        return $this->itemModel->updateItem($id, $userId, $itemArray['title'], $itemArray['description'], $itemArray['price'], $itemArray['type'], $images);
+        return $this->itemModel->updateItem(
+            $id, $userId,
+            $itemArray['title'], $itemArray['description'], $itemArray['price'], $itemArray['productTypeId'],
+            $images,
+            null,
+            $itemArray['condition'] ?? 'good',
+            $itemArray['genre'] ?? null
+        );
     }
 
     private function uploadImages(array $files): array {
         error_log('uploadImages called with: ' . json_encode($files));
-        
+
         if (!isset($files['tmp_name']) || empty($files['tmp_name'][0])) {
             error_log('No tmp_name or empty tmp_name[0]');
             return [];
@@ -132,8 +149,7 @@ class ItemController {
 
         for ($i = 0; $i < $count; $i++) {
             $tmpPath = $files['tmp_name'][$i];
-            
-            // Check if file exists (handles both uploaded and manually created temp files)
+
             if (!empty($tmpPath) && file_exists($tmpPath)) {
                 $tmpFiles[] = $tmpPath;
                 error_log("File $i added: $tmpPath (size: " . filesize($tmpPath) . ")");
@@ -150,7 +166,7 @@ class ItemController {
         error_log('Calling cloudinary->uploadImages with ' . count($tmpFiles) . ' files');
         $result = $this->cloudinary->uploadImages($tmpFiles);
         error_log('Cloudinary returned: ' . json_encode($result));
-        
+
         return $result;
     }
 }

@@ -59,8 +59,9 @@ class ProductTypeModel extends BaseModel {
     private function normalizeRow(array $row): array {
         return [
             'product_type_id' => (int)$row['product_type_id'],
-            'name' => $row['name'],
-            'image_url' => $row['image_url']
+            'name'            => $row['name'],
+            'image_url'       => $row['image_url'],
+            'supports_genre'  => (bool)($row['supports_genre'] ?? false),
         ];
     }
 }

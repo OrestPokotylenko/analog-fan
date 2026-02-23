@@ -24,6 +24,18 @@ const selectedQuantity = ref(1);
 
 const { toastVisible: showNotification, toastMessage: notificationMessage, showToast } = useToast();
 
+const CONDITION_LABELS = {
+  new:      'New / Sealed',
+  like_new: 'Like New',
+  good:     'Good',
+  fair:     'Fair',
+  poor:     'Poor',
+};
+
+function conditionLabel(val) {
+  return CONDITION_LABELS[val] ?? val;
+}
+
 onMounted(async () => {
   await fetchItem();
   await fetchLikedItems();
@@ -353,6 +365,12 @@ async function contactSeller() {
         <div class="header-section">
           <div class="title-area">
             <p class="product-type">{{ item.type || 'Product' }}</p>
+            <div class="item-badges">
+              <span v-if="item.condition" class="badge condition-badge" :data-condition="item.condition">
+                {{ conditionLabel(item.condition) }}
+              </span>
+              <span v-if="item.genre" class="badge genre-badge">{{ item.genre }}</span>
+            </div>
             <h1 class="product-title">{{ item.title }}</h1>
             <p class="product-date">Listed {{ formattedDate }}</p>
           </div>
@@ -462,6 +480,37 @@ async function contactSeller() {
 
 .container {
   padding: 40px 30px;
+}
+
+/* ── Condition & genre badges ── */
+.item-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 6px 0 10px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.78em;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* colour-coded by condition */
+.condition-badge[data-condition="new"]      { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.35); }
+.condition-badge[data-condition="like_new"] { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.35); }
+.condition-badge[data-condition="good"]     { background: rgba(234,179, 8,0.15); color: #facc15; border: 1px solid rgba(234,179, 8,0.35); }
+.condition-badge[data-condition="fair"]     { background: rgba(249,115,22,0.15); color: #fb923c; border: 1px solid rgba(249,115,22,0.35); }
+.condition-badge[data-condition="poor"]     { background: rgba(239, 68,68,0.15); color: #f87171; border: 1px solid rgba(239, 68,68,0.35); }
+
+.genre-badge {
+  background: rgba(233,69,96,0.12);
+  color: #e94560;
+  border: 1px solid rgba(233,69,96,0.3);
 }
 
 .loading-state,

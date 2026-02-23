@@ -4,6 +4,8 @@ import { useRoute } from 'vue-router';
 import axios from '../../services/axiosConfig';
 import PageLayout from '../../components/layout/PageLayout.vue';
 import ItemCard from '../../components/common/ItemCard.vue';
+import FilterPanel from '../../components/items/FilterPanel.vue';
+import { useItemFilters } from '../../composables/useItemFilters';
 
 const route = useRoute();
 const items = ref([]);
@@ -13,6 +15,11 @@ const errorMessage = ref('');
 const categoryType = ref('');
 const productTypeId = ref(null);
 const productTypes = ref([]);
+
+const {
+  minPrice, maxPrice, selectedConditions, selectedTypes,
+  sortOrder, filteredItems, activeFilterCount, clearFilters,
+} = useItemFilters(items);
 
 onMounted(async () => {
   categoryType.value = route.params.typeName || '';
@@ -26,6 +33,7 @@ watch(() => route.params.typeName, (newTypeName) => {
   categoryType.value = newTypeName || '';
   matchTypeNameToId();
   fetchItemsByType();
+  clearFilters();
 });
 
 async function fetchProductTypes() {
@@ -44,10 +52,7 @@ function matchTypeNameToId() {
 }
 
 async function fetchItemsByType() {
-  if (!productTypeId.value) {
-    return;
-  }
-
+  if (!productTypeId.value) return;
   try {
     isLoading.value = true;
     errorMessage.value = '';
@@ -64,10 +69,7 @@ async function fetchItemsByType() {
 
 async function fetchLikedItems() {
   const user = JSON.parse(localStorage.getItem('user'));
-  if (!user || !user.userId) {
-    return;
-  }
-
+  if (!user || !user.userId) return;
   try {
     const response = await axios.get(`/liked-items/${user.userId}`);
     likedItems.value = response.data.map((item) => item.itemId);
@@ -96,18 +98,35 @@ async function fetchLikedItems() {
         <p>{{ errorMessage }}</p>
       </div>
 
-      <div v-else-if="!items.length" class="empty-state">
-        <p>No items found in this category</p>
-      </div>
-
-      <div v-else class="items-grid">
-        <ItemCard 
-          v-for="item in items" 
-          :key="item.itemId" 
-          :item="item"
-          :likedItems="likedItems"
+      <template v-else>
+        <FilterPanel
+          v-model:minPrice="minPrice"
+          v-model:maxPrice="maxPrice"
+          v-model:selectedConditions="selectedConditions"
+          v-model:selectedTypes="selectedTypes"
+          v-model:sortOrder="sortOrder"
+          :activeFilterCount="activeFilterCount"
+          @clear="clearFilters"
         />
-      </div>
+
+        <p v-if="filteredItems.length !== items.length" class="result-count">
+          Showing {{ filteredItems.length }} of {{ items.length }} items
+        </p>
+
+        <div v-if="!filteredItems.length" class="empty-state">
+          <p>{{ items.length ? 'No items match your filters.' : 'No items found in this category.' }}</p>
+          <button v-if="activeFilterCount" class="btn-reset" @click="clearFilters">Clear filters</button>
+        </div>
+
+        <div v-else class="items-grid">
+          <ItemCard
+            v-for="item in filteredItems"
+            :key="item.itemId"
+            :item="item"
+            :likedItems="likedItems"
+          />
+        </div>
+      </template>
     </div>
   </div>
   </PageLayout>
@@ -151,6 +170,12 @@ async function fetchLikedItems() {
   padding: 0 30px;
 }
 
+.result-count {
+  color: #b0b0b0;
+  font-size: 0.9em;
+  margin: 0 0 20px;
+}
+
 .loading-state,
 .error-state,
 .empty-state {
@@ -164,9 +189,20 @@ async function fetchLikedItems() {
   color: #b0b0b0;
 }
 
-.error-state {
-  color: #ff6b7a;
+.error-state { color: #ff6b7a; }
+
+.btn-reset {
+  margin-top: 16px;
+  background: transparent;
+  border: 1px solid rgba(233, 69, 96, 0.4);
+  color: #e94560;
+  padding: 8px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: all 0.2s;
 }
+.btn-reset:hover { background: rgba(233, 69, 96, 0.1); }
 
 .items-grid {
   display: grid;
@@ -176,54 +212,24 @@ async function fetchLikedItems() {
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @media (max-width: 1024px) {
-  .items-grid {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 25px;
-  }
+  .items-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 25px; }
 }
 
 @media (max-width: 768px) {
-  .hero-section {
-    padding: 60px 20px;
-    margin-bottom: 40px;
-  }
-
-  .hero-title {
-    font-size: 2.2em;
-  }
-
-  .hero-subtitle {
-    font-size: 1em;
-  }
-
-  .container {
-    padding: 0 20px;
-  }
-
-  .items-grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 20px;
-  }
+  .hero-section { padding: 60px 20px; margin-bottom: 40px; }
+  .hero-title   { font-size: 2.2em; }
+  .hero-subtitle { font-size: 1em; }
+  .container    { padding: 0 20px; }
+  .items-grid   { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
 }
 
 @media (max-width: 480px) {
-  .hero-title {
-    font-size: 1.8em;
-  }
-
-  .items-grid {
-    grid-template-columns: 1fr;
-  }
+  .hero-title { font-size: 1.8em; }
+  .items-grid { grid-template-columns: 1fr; }
 }
 </style>

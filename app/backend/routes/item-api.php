@@ -130,9 +130,11 @@ Route::add('/api/items', function () use ($itemController, $userController) {
         $price = (float)($_POST['price'] ?? 0);
         $type = $_POST['type'] ?? '';
         $quantity = (int)($_POST['quantity'] ?? 1);
+        $condition = $_POST['condition'] ?? 'good';
+        $genre = $_POST['genre'] ?? null;
         $files = $_FILES['images'] ?? null;
 
-        $item = $itemController->postItem($userId, $title, $description, $price, $type, $files, $quantity);
+        $item = $itemController->postItem($userId, $title, $description, $price, $type, $files, $quantity, $condition, $genre);
         echo json_encode($item);
     } catch (\Throwable $e) {
         http_response_code(http_status_from_exception($e));
@@ -160,6 +162,8 @@ Route::add('/api/items/{id}', function ($id) use ($itemController, $userControll
         $price = (float)($_PUT['price'] ?? 0);
         $type = $_PUT['type'] ?? '';
         $quantity = isset($_PUT['quantity']) ? (int)$_PUT['quantity'] : null;
+        $condition = $_PUT['condition'] ?? null;
+        $genre = $_PUT['genre'] ?? null;
         $files = $_PUT_FILES['images'] ?? null;
 
         $existingImages = $_PUT['existing_images'] ?? [];
@@ -167,7 +171,7 @@ Route::add('/api/items/{id}', function ($id) use ($itemController, $userControll
             $existingImages = [];
         }
 
-        $item = $itemController->updateItemWithFiles($id, $userId, $title, $description, $price, $type, $files, $existingImages, $quantity);
+        $item = $itemController->updateItemWithFiles($id, $userId, $title, $description, $price, $type, $files, $existingImages, $quantity, $condition, $genre);
 
         echo json_encode([
             'success' => true,

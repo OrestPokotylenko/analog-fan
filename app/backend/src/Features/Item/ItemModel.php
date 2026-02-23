@@ -10,11 +10,9 @@ class ItemModel extends BaseModel {
 
     public function getItems($userId = null) {
         if ($userId === null) {
-            // Guest user - show all items
             $stmt = $this->pdo->prepare("SELECT * FROM {$this->table}");
             $stmt->execute();
         } else {
-            // Logged-in user - exclude their own items
             $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE user_id != ?");
             $stmt->execute([$userId]);
         }
@@ -36,36 +34,39 @@ class ItemModel extends BaseModel {
         return array_map([$this, 'normalizeRow'], $rows);
     }
 
-    public function postItem($userId, $title, $description, $price, $type, $imagesPath, $quantity = 1) {
+    public function postItem($userId, $title, $description, $price, $type, $imagesPath, $quantity = 1, $condition = 'good', $genre = null) {
         $imageJson = json_encode(is_array($imagesPath) ? $imagesPath : []);
-        $sql = "INSERT INTO {$this->table} (user_id, title, description, price, product_type_id, images, quantity)
-                VALUES (?, ?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO {$this->table}
+                    (user_id, title, description, price, product_type_id, images, quantity, item_condition, genre)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->pdo->prepare($sql);
 
-        if (!$stmt->execute([$userId, $title, $description, $price, $type, $imageJson, $quantity])) {
+        if (!$stmt->execute([$userId, $title, $description, $price, $type, $imageJson, $quantity, $condition, $genre])) {
             throw new Exception('Failed to create item');
         }
 
         return $this->fetchItemById((int)$this->pdo->lastInsertId());
     }
 
-    public function updateItem($id, $userId, $title, $description, $price, $type, $imagesPath, $quantity = null) {
+    public function updateItem($id, $userId, $title, $description, $price, $type, $imagesPath, $quantity = null, $condition = null, $genre = null) {
         $imageJson = json_encode(is_array($imagesPath) ? $imagesPath : []);
-        
+
         if ($quantity !== null) {
             $sql = "UPDATE {$this->table}
-                    SET title = ?, description = ?, price = ?, product_type_id = ?, images = ?, quantity = ?
+                    SET title = ?, description = ?, price = ?, product_type_id = ?, images = ?,
+                        quantity = ?, item_condition = ?, genre = ?
                     WHERE item_id = ? AND user_id = ?";
             $stmt = $this->pdo->prepare($sql);
-            if (!$stmt->execute([$title, $description, $price, $type, $imageJson, $quantity, $id, $userId])) {
+            if (!$stmt->execute([$title, $description, $price, $type, $imageJson, $quantity, $condition, $genre, $id, $userId])) {
                 throw new Exception('Failed to update item');
             }
         } else {
             $sql = "UPDATE {$this->table}
-                    SET title = ?, description = ?, price = ?, product_type_id = ?, images = ?
+                    SET title = ?, description = ?, price = ?, product_type_id = ?, images = ?,
+                        item_condition = ?, genre = ?
                     WHERE item_id = ? AND user_id = ?";
             $stmt = $this->pdo->prepare($sql);
-            if (!$stmt->execute([$title, $description, $price, $type, $imageJson, $id, $userId])) {
+            if (!$stmt->execute([$title, $description, $price, $type, $imageJson, $condition, $genre, $id, $userId])) {
                 throw new Exception('Failed to update item');
             }
         }
@@ -91,15 +92,15 @@ class ItemModel extends BaseModel {
     public function decrementQuantity($itemId, $quantity) {
         $sql = "UPDATE {$this->table} SET quantity = quantity - ? WHERE item_id = ? AND quantity >= ?";
         $stmt = $this->pdo->prepare($sql);
-        
+
         if (!$stmt->execute([$quantity, $itemId, $quantity])) {
             throw new Exception('Failed to decrement quantity');
         }
-        
+
         if ($stmt->rowCount() === 0) {
             throw new Exception('Insufficient quantity available');
         }
-        
+
         return $this->fetchItemById($itemId);
     }
 
@@ -113,6 +114,8 @@ class ItemModel extends BaseModel {
             'productTypeId' => (int)($row['product_type_id'] ?? 0),
             'type'          => $row['type'] ?? '',
             'quantity'      => (int)($row['quantity'] ?? 1),
+            'condition'     => $row['item_condition'] ?? 'good',
+            'genre'         => $row['genre'] ?? null,
             'createdAt'     => $row['creation_date'] ?? null,
             'imagesPath'    => $this->decodeImages($row['images'] ?? '[]'),
         ];

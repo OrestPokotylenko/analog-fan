@@ -2,7 +2,7 @@
 import { ref, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import axios from '../../services/axiosConfig';
-import Header from '../../components/layout/Header.vue';
+import PageLayout from '../../components/layout/PageLayout.vue';
 import ItemCard from '../../components/common/ItemCard.vue';
 
 const route = useRoute();
@@ -78,7 +78,7 @@ async function fetchLikedItems() {
 </script>
 
 <template>
-  <Header />
+  <PageLayout>
   <div class="category-page">
     <div class="hero-section">
       <div class="hero-content">
@@ -87,7 +87,7 @@ async function fetchLikedItems() {
       </div>
     </div>
 
-    <div class="container">
+    <div class="container container-xl">
       <div v-if="isLoading" class="loading-state">
         <p>Loading items...</p>
       </div>
@@ -110,13 +110,12 @@ async function fetchLikedItems() {
       </div>
     </div>
   </div>
+  </PageLayout>
 </template>
 
 <style scoped>
 .category-page {
-  padding-top: 70px;
-  background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
-  min-height: 100vh;
+  min-height: unset;
   padding-bottom: 60px;
 }
 
@@ -149,8 +148,6 @@ async function fetchLikedItems() {
 }
 
 .container {
-  max-width: 1400px;
-  margin: 0 auto;
   padding: 0 30px;
 }
 

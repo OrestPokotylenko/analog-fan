@@ -2,7 +2,7 @@
 import { ref, onMounted, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from '../../services/axiosConfig';
-import Header from '../../components/layout/Header.vue';
+import PageLayout from '../../components/layout/PageLayout.vue';
 import ItemsGrid from '../../components/ui/ItemsGrid.vue';
 import ItemCard from '../../components/common/ItemCard.vue';
 import LoadingSpinner from '../../components/ui/LoadingSpinner.vue';
@@ -59,10 +59,10 @@ async function loadWishlist() {
 </script>
 
 <template>
-  <Header />
+  <PageLayout>
   <div class="page">
     <section class="content">
-      <div class="container">
+      <div class="container container-xl">
         <div class="section-header">
           <div class="section-titles">
             <h2 class="section-title">My Wishlist</h2>
@@ -82,22 +82,16 @@ async function loadWishlist() {
       </div>
     </section>
   </div>
+  </PageLayout>
 </template>
 
 <style scoped>
 .page {
-  background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
-  min-height: 100vh;
-  padding-top: 66px;
+  padding-top: 4px;
 }
 
 .content {
   padding: 60px 30px;
-}
-
-.container {
-  max-width: 1400px;
-  margin: 0 auto;
 }
 
 .section-header {

@@ -14,6 +14,8 @@ const type = ref('');
 const productTypes = ref([]);
 const isLoadingTypes = ref(false);
 const isSubmitting = ref(false);
+const formError = ref('');
+const imageError = ref('');
 
 const router = useRouter();
 
@@ -35,6 +37,8 @@ onMounted(fetchProductTypes);
 async function handleSubmit() {
     if (isSubmitting.value) return;
     
+    formError.value = '';
+
     if (!validatePrice()) {
         return;
     }
@@ -85,7 +89,7 @@ async function postItem(data) {
         }
     } catch (error) {
         console.error('Failed to publish item:', error);
-        alert('Failed to publish item. Please try again.');
+        formError.value = 'Failed to publish item. Please try again.';
     }
 }
 
@@ -98,7 +102,8 @@ function validateImages(event) {
   );
 
   if (validFiles.length !== selectedFiles.length) {
-    alert('Only PNG and JPG files are allowed.');
+    imageError.value = 'Some files were skipped. Only PNG and JPG files are allowed.';
+    setTimeout(() => { imageError.value = ''; }, 4000);
   }
 
   images.value = [...(images.value || []), ...validFiles];
@@ -122,13 +127,13 @@ function validatePrice() {
   const priceValue = price.value.trim();
 
   if (!priceValue) {
-    alert('Price is required.');
+    formError.value = 'Price is required.';
     return false;
   }
 
   const priceNumber = parseFloat(priceValue);
   if (isNaN(priceNumber) || priceNumber <= 0) {
-    alert('Please enter a valid positive number for the price.');
+    formError.value = 'Please enter a valid positive number for the price.';
     return false;
   }
 
@@ -139,13 +144,13 @@ function validateQuantity() {
   const quantityValue = quantity.value.trim();
 
   if (!quantityValue) {
-    alert('Quantity is required.');
+    formError.value = 'Quantity is required.';
     return false;
   }
 
   const quantityNumber = parseInt(quantityValue);
   if (isNaN(quantityNumber) || quantityNumber < 1) {
-    alert('Please enter a valid quantity (at least 1).');
+    formError.value = 'Please enter a valid quantity (at least 1).';
     return false;
   }
 
@@ -223,6 +228,7 @@ function validateQuantity() {
 
             <div class="form-group">
                 <label for="images" class="form-label">Images (PNG/JPG)</label>
+                <p v-if="imageError" class="field-error">{{ imageError }}</p>
                 
                 <!-- Image Previews -->
                 <div v-if="imagePreviews.length > 0" class="image-previews">
@@ -254,6 +260,8 @@ function validateQuantity() {
                     </div>
                 </div>
             </div>
+
+            <p v-if="formError" class="form-error-message">{{ formError }}</p>
 
             <button 
                 type="submit" 
@@ -503,6 +511,22 @@ function validateQuantity() {
 .btn-icon {
     font-size: 1.3rem;
     animation: float 3s ease-in-out infinite;
+}
+
+.form-error-message {
+    background: rgba(233, 69, 96, 0.1);
+    border: 1px solid rgba(233, 69, 96, 0.4);
+    color: #ff6b7a;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.9em;
+    margin: 0;
+}
+
+.field-error {
+    color: #ff6b7a;
+    font-size: 0.85em;
+    margin: 4px 0 0 0;
 }
 
 @keyframes float {

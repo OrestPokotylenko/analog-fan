@@ -1,10 +1,6 @@
-export class AuthService {
-    logout(url) {
-        localStorage.removeItem('jwtToken');
-        localStorage.removeItem('user');
-        this.$auth.isLoggedIn = false;
-        this.$auth.token = null;
-        this.$auth.user = null;
-        this.$router.push(url || '/login');
-      }
+import { clearAuthState } from './authHelpers';
+
+export function logout(auth, router, redirectUrl = '/login') {
+  clearAuthState(auth);
+  router.push(redirectUrl);
 }

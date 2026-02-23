@@ -41,22 +41,22 @@ const sizeClass = computed(() => `spinner-${props.size}`);
 .spinner-small {
   width: 30px;
   height: 30px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top-color: #667eea;
+  border: 3px solid rgba(233, 69, 96, 0.2);
+  border-top-color: #e94560;
 }
 
 .spinner-medium {
   width: 50px;
   height: 50px;
-  border: 4px solid rgba(255, 255, 255, 0.1);
-  border-top-color: #667eea;
+  border: 4px solid rgba(233, 69, 96, 0.2);
+  border-top-color: #e94560;
 }
 
 .spinner-large {
   width: 70px;
   height: 70px;
-  border: 5px solid rgba(255, 255, 255, 0.1);
-  border-top-color: #667eea;
+  border: 5px solid rgba(233, 69, 96, 0.2);
+  border-top-color: #e94560;
 }
 
 @keyframes spin {

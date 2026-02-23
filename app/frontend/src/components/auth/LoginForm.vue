@@ -23,11 +23,9 @@ async function handleLogin() {
   try {
     isLoggingIn.value = true;
     errorMessage.value = '';
-    const response = await axios.get('/authenticate', {
-      params: {
-        username: username.value,
-        password: password.value
-      }
+    const response = await axios.post('/authenticate', {
+      username: username.value,
+      password: password.value
     });
 
     if (response.data.success) {

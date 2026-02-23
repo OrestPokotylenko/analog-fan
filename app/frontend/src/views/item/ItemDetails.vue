@@ -1,10 +1,11 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from '../../services/axiosConfig';
 import CartService from '../../services/CartService';
-import Header from '../../components/layout/Header.vue';
+import PageLayout from '../../components/layout/PageLayout.vue';
 import LoginPrompt from '../../components/common/LoginPrompt.vue';
+import { useToast } from '../../composables/useToast';
 
 const route = useRoute();
 const router = useRouter();
@@ -15,13 +16,13 @@ const errorMessage = ref('');
 const isLiked = ref(false);
 const cartItems = ref([]);
 const selectedImageIndex = ref(0);
-const showNotification = ref(false);
-const notificationMessage = ref('');
 const addedToCart = ref(false);
 const showLoginPrompt = ref(false);
 const isLiking = ref(false);
 const isAddingToCart = ref(false);
 const selectedQuantity = ref(1);
+
+const { toastVisible: showNotification, toastMessage: notificationMessage, showToast } = useToast();
 
 onMounted(async () => {
   await fetchItem();
@@ -118,14 +119,6 @@ async function toggleLike() {
   }
 }
 
-function showToast(message, duration = 3000) {
-  notificationMessage.value = message;
-  showNotification.value = true;
-  setTimeout(() => {
-    showNotification.value = false;
-  }, duration);
-}
-
 async function addToCart() {
   if (isAddingToCart.value) return;
   
@@ -205,7 +198,7 @@ function buyNow() {
   }
 
   if (item.value.userId === user.userId) {
-    alert('You cannot buy your own items');
+    showToast('You cannot buy your own items');
     return;
   }
 
@@ -282,13 +275,10 @@ async function contactSeller() {
   });
 }
 
-onUnmounted(() => {
-  // cleanup
-});
 </script>
 
 <template>
-  <Header />
+  <PageLayout>
   <div class="details-page">
     <!-- Toast Notification -->
     <transition name="toast">
@@ -305,7 +295,7 @@ onUnmounted(() => {
       <p>{{ errorMessage }}</p>
     </div>
 
-    <div v-else-if="item" class="container">
+    <div v-else-if="item" class="container container-md">
       <!-- Images Section - Full width on top -->
       <div class="images-section-top">
         <div 
@@ -462,19 +452,15 @@ onUnmounted(() => {
     @close="showLoginPrompt = false"
     @login="router.push('/login')"
   />
+  </PageLayout>
 </template>
 
 <style scoped>
 .details-page {
-  padding-top: 70px;
-  background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
-  min-height: 100vh;
   padding-bottom: 60px;
 }
 
 .container {
-  max-width: 900px;
-  margin: 0 auto;
   padding: 40px 30px;
 }
 
@@ -510,7 +496,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 600px;
+  height: clamp(260px, 50vw, 600px);
   width: 100%;
   background: linear-gradient(135deg, #16213e 0%, #0f0f1e 100%);
   border-radius: 12px;
@@ -999,6 +985,7 @@ onUnmounted(() => {
 .toast-notification {
   position: fixed;
   top: 100px;
+  bottom: auto;
   right: 30px;
   background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
   color: white;

@@ -1,7 +1,8 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, inject } from 'vue';
 import { useRouter } from 'vue-router';
-import Header from '../../components/layout/Header.vue';
+import PageLayout from '../../components/layout/PageLayout.vue';
+import LoadingSpinner from '../../components/ui/LoadingSpinner.vue';
 import CartService from '../../services/CartService';
 import OrderService from '../../services/OrderService';
 import PaymentService from '../../services/PaymentService';
@@ -234,16 +235,13 @@ function goBack() {
 </script>
 
 <template>
+  <PageLayout>
   <div class="checkout-page">
-    <Header />
     
-    <div class="container">
+    <div class="container container-xl">
       <button @click="goBack" class="btn-back">← Back to Cart</button>
 
-      <div v-if="isLoading" class="loading">
-        <div class="spinner"></div>
-        <p>Loading checkout...</p>
-      </div>
+      <LoadingSpinner v-if="isLoading" message="Loading checkout..." />
 
       <div v-else class="checkout-content">
         <div class="checkout-form">
@@ -396,19 +394,15 @@ function goBack() {
       </div>
     </div>
   </div>
+  </PageLayout>
 </template>
 
 <style scoped>
 .checkout-page {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
-  padding-top: 70px;
   padding-bottom: 3rem;
 }
 
 .container {
-  max-width: 1400px;
-  margin: 0 auto;
   padding: 2rem 1rem;
 }
 
@@ -431,25 +425,7 @@ function goBack() {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
-.loading {
-  text-align: center;
-  color: white;
-  padding: 3rem;
-}
-
-.spinner {
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  border-top: 4px solid white;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  animation: spin 1s linear infinite;
   margin: 0 auto 1rem;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
 }
 
 .checkout-content {

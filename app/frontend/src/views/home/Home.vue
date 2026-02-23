@@ -45,7 +45,7 @@ async function fetchLikedItems() {
     </section>
 
     <section class="featured">
-      <div class="container">
+      <div class="container container-xl">
         <div class="section-header">
           <h2 class="section-title">Featured Items</h2>
           <p class="section-subtitle">Explore our latest collection</p>
@@ -97,11 +97,6 @@ async function fetchLikedItems() {
 
 .featured {
   padding: 60px 30px;
-}
-
-.container {
-  max-width: 1400px;
-  margin: 0 auto;
 }
 
 .section-header {

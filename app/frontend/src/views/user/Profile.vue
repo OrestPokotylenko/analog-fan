@@ -1,15 +1,12 @@
 <template>
-  <Header />
+  <PageLayout>
   <div class="profile-page">
-    <div class="container">
+    <div class="container container-sm">
       <div class="profile-header">
         <h1>My Profile</h1>
       </div>
 
-      <div v-if="isLoading" class="loading">
-        <div class="spinner"></div>
-        <p>Loading profile...</p>
-      </div>
+      <LoadingSpinner v-if="isLoading" message="Loading profile..." />
 
       <div v-else class="profile-content">
         <!-- Display Mode -->
@@ -88,7 +85,7 @@
                   />
                   <button
                     type="button"
-                    @click="$refs.photoInput.click()"
+                    @click="photoInput.click()"
                     class="btn btn-secondary"
                     :disabled="isSaving"
                   >
@@ -181,14 +178,17 @@
       </div>
     </Transition>
   </div>
+  </PageLayout>
 </template>
 
 <script setup>
 import { ref, onMounted, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from '../../services/axiosConfig';
-import Header from '../../components/layout/Header.vue';
+import PageLayout from '../../components/layout/PageLayout.vue';
+import LoadingSpinner from '../../components/ui/LoadingSpinner.vue';
 import { isTokenExpired, clearAuthState } from '../../services/authHelpers';
+import { useToast } from '../../composables/useToast';
 
 const router = useRouter();
 const $auth = inject('$auth');
@@ -197,11 +197,11 @@ const editForm = ref({});
 const isLoading = ref(true);
 const isEditing = ref(false);
 const isSaving = ref(false);
-const showNotification = ref(false);
-const notificationMessage = ref('');
 const photoInput = ref(null);
 const photoPreview = ref(null);
 const selectedFile = ref(null);
+
+const { toastVisible: showNotification, toastMessage: notificationMessage, showToast } = useToast();
 
 onMounted(async () => {
   // Check token expiration immediately
@@ -346,14 +346,6 @@ async function saveProfile() {
   }
 }
 
-function showToast(message, duration = 3000) {
-  notificationMessage.value = message;
-  showNotification.value = true;
-  setTimeout(() => {
-    showNotification.value = false;
-  }, duration);
-}
-
 function formatDate(dateString) {
   if (!dateString) return 'N/A';
   return dateString;
@@ -362,15 +354,10 @@ function formatDate(dateString) {
 
 <style scoped>
 .profile-page {
-  padding-top: 70px;
-  background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
-  min-height: 100vh;
   padding-bottom: 60px;
 }
 
 .container {
-  max-width: 800px;
-  margin: 0 auto;
   padding: 40px 30px;
 }
 
@@ -383,26 +370,6 @@ function formatDate(dateString) {
   color: white;
   font-weight: 800;
   margin: 0;
-}
-
-.loading {
-  text-align: center;
-  padding: 80px 20px;
-  color: white;
-}
-
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid rgba(233, 69, 96, 0.2);
-  border-top-color: #e94560;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 20px;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }
 
 .profile-content {
@@ -476,6 +443,7 @@ function formatDate(dateString) {
   padding: 15px;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
+  flex-wrap: wrap;
 }
 
 .photo-preview {
@@ -485,6 +453,7 @@ function formatDate(dateString) {
 .photo-upload-controls {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .btn-danger {
@@ -637,33 +606,6 @@ function formatDate(dateString) {
   transform: translateY(-2px);
 }
 
-.toast-notification {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  background: linear-gradient(135deg, #e94560 0%, #ff6b81 100%);
-  color: white;
-  padding: 16px 24px;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(233, 69, 96, 0.4);
-  z-index: 10000;
-  font-weight: 600;
-}
-
-.toast-enter-active, .toast-leave-active {
-  transition: all 0.3s ease;
-}
-
-.toast-enter-from {
-  transform: translateX(400px);
-  opacity: 0;
-}
-
-.toast-leave-to {
-  transform: translateY(50px);
-  opacity: 0;
-}
-
 @media (max-width: 1024px) {
   .container {
     padding: 30px 20px;
@@ -720,14 +662,6 @@ function formatDate(dateString) {
   
   .btn {
     padding: 10px 20px;
-    font-size: 0.9em;
-  }
-  
-  .toast-notification {
-    bottom: 20px;
-    right: 20px;
-    left: 20px;
-    padding: 12px 16px;
     font-size: 0.9em;
   }
 }

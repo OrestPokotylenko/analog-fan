@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 const notifications = ref([]);
@@ -45,7 +45,7 @@ defineExpose({
 </script>
 
 <template>
-  <div class="notification-container">
+  <div class="notification-container" role="log" aria-live="polite" aria-atomic="false">
     <transition-group name="notification">
       <div
         v-for="notification in notifications"

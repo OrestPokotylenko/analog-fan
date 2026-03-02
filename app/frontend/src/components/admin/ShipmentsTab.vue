@@ -1,12 +1,9 @@
 <script setup>
+import { formatDate } from '../../utils/formatters';
 defineProps({ shipments: { type: Array, required: true } });
 
 function statusColor(s) {
   return { pending: '#f59e0b', in_transit: '#3b82f6', out_for_delivery: '#8b5cf6', delivered: '#10b981', failed: '#ef4444', returned: '#6b7280' }[s] || '#6b7280';
-}
-function formatDate(d) {
-  if (!d) return 'N/A';
-  return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 </script>
 
@@ -31,7 +28,7 @@ function formatDate(d) {
           </td>
           <td data-label="Date">{{ formatDate(s.created_at) }}</td>
           <td data-label="Actions" class="actions-cell">
-            <a :href="`http://localhost/api/shipments/${s.id}/label`" target="_blank" class="btn-action btn-view">📄 Label</a>
+            <a :href="`/api/shipments/${s.id}/label`" target="_blank" class="btn-action btn-view">📄 Label</a>
             <a v-if="s.tracking_url" :href="s.tracking_url" target="_blank" class="btn-action btn-track">📍 Track</a>
           </td>
         </tr>

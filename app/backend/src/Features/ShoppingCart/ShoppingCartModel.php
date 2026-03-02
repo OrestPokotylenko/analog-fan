@@ -7,8 +7,10 @@ use App\Core\BaseModel;
 class ShoppingCartModel extends BaseModel {
     private string $table = 'shopping_carts';
 
+    private const COLUMNS = 'id, user_id, created_at, updated_at';
+
     public function getCartByUserId($userId) {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE user_id = ?");
+        $stmt = $this->pdo->prepare("SELECT " . self::COLUMNS . " FROM {$this->table} WHERE user_id = ?");
         $stmt->execute([$userId]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         return $row ? $this->normalizeRow($row) : null;

@@ -14,7 +14,6 @@ class ShoppingCartItemDto
     
     // Item details (populated when joined)
     public string $title = '';
-    public string $description = '';
     public float $price = 0.0;
     public array $images = [];
     public int $sellerId = 0;
@@ -48,7 +47,6 @@ class ShoppingCartItemDto
             'quantity' => $this->quantity,
             'addedAt' => $this->addedAt->format('Y-m-d H:i:s'),
             'title' => $this->title,
-            'description' => $this->description,
             'price' => $this->price,
             'images' => $this->images,
             'sellerId' => $this->sellerId

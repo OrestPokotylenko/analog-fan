@@ -22,6 +22,13 @@ Route::add('/api/users/{id}', function($id) use ($userController) {
 
 Route::add('/api/users', function() use ($userController, $jwtService) {
     $userData = json_decode(file_get_contents('php://input'), true);
+    
+    if (empty($userData['username']) || empty($userData['email'])) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Username and email are required']);
+        return;
+    }
+    
     $userExists = $userController->userExists($userData['username'], $userData['email']);
 
     if (!$userExists) {
@@ -30,11 +37,14 @@ Route::add('/api/users', function() use ($userController, $jwtService) {
         if ($createdUser) {
             // Generate JWT token for automatic login after registration
             $token = $jwtService->generateJWT($createdUser);
+            http_response_code(201);
             echo json_encode(['success' => true, 'token' => $token, 'user' => $createdUser]);
         } else {
+            http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'Passwords do not match']);
         }
     } else {
+        http_response_code(409);
         echo json_encode(['success' => false, 'message' => 'User already exists']);
     }
 }, 'post');
@@ -73,6 +83,7 @@ Route::add('/api/authenticate', function () use ($userController) {
     if ($result) {
         echo json_encode(['success' => true, 'token' => $result['token'], 'user' => $result['user']]);
     } else {
+        http_response_code(401);
         echo json_encode(['success' => false, 'message' => 'Invalid username or password']);
     }
 }, 'post');
@@ -94,24 +105,41 @@ Route::add('/api/protected', function () use ($jwtService) {
 }, 'get');
 
 Route::add('/api/reset-password', function () use ($passwordResetService) {
-    $email = $_GET['email'];
+    $email = $_GET['email'] ?? '';
+    if (empty($email)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Email is required']);
+        return;
+    }
     $result = $passwordResetService->requestPasswordReset($email);
 
     if ($result) {
         echo json_encode(['success' => true, 'message' => 'Reset link sent']);
     } else {
+        http_response_code(404);
         echo json_encode(['success' => false, 'message' => 'User not found']);
     }
 }, 'get');
 
 Route::add('/api/validate-token', function () use ($linkController) {
-    $token = $_GET['token'];
+    $token = $_GET['token'] ?? '';
+    if (empty($token)) {
+        http_response_code(400);
+        echo json_encode(['isValid' => false]);
+        return;
+    }
     $result = $linkController->validLink($token);
     echo json_encode(['isValid' => $result]);
 });
 
 Route::add('/api/reset-password', function () use ($passwordResetService) {
     $data = json_decode(file_get_contents('php://input'), true);
+    if (empty($data['token']) || empty($data['password'])) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Token and password are required']);
+        return;
+    }
     $passwordResetService->resetPassword($data['token'], $data['password']);
+    echo json_encode(['success' => true, 'message' => 'Password reset successfully']);
 }, 'put');
 

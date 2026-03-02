@@ -60,6 +60,7 @@
 
 <script setup>
 import StatusBadge from '../ui/StatusBadge.vue';
+import { formatDate, formatPrice } from '../../utils/formatters';
 
 defineProps({
   order: {
@@ -74,19 +75,7 @@ defineProps({
 
 defineEmits(['click']);
 
-const formatDate = (dateString) => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  });
-};
-
-const formatPrice = (price) => {
-  return `€${parseFloat(price).toFixed(2)}`;
-};
+// formatDate and formatPrice provided by shared utils/formatters.js
 </script>
 
 <style scoped>

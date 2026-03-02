@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 const CONDITION_LABELS = {
@@ -22,30 +22,36 @@ const props = defineProps({
   likedItems: { type: Array, required: true }
 });
 
-const isLiked = computed(() => props.likedItems.includes(props.item.itemId));
+// Local copy of the liked state — avoids mutating the parent prop directly
+const isLikedLocal = ref(props.likedItems.includes(props.item.itemId));
+
+// Keep in sync if parent updates the list (e.g. after navigation)
+watch(() => props.likedItems, (list) => {
+  isLikedLocal.value = list.includes(props.item.itemId);
+}, { deep: true });
+
 const showLoginPrompt = ref(false);
 
 async function likeItem() {
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
   if (!user || !user.userId) { showLoginPrompt.value = true; return; }
-  if (!isLiked.value) {
-    await createLikedItem(user.userId);
-    props.likedItems.push(props.item.itemId);
+  if (!isLikedLocal.value) {
+    isLikedLocal.value = true; // optimistic
+    try {
+      await axios.post('/liked-items', { itemId: props.item.itemId, userId: user.userId });
+    } catch (e) {
+      isLikedLocal.value = false; // revert
+      console.error('Failed to create liked item:', e);
+    }
   } else {
-    await deleteLikedItem(user.userId);
-    const index = props.likedItems.indexOf(props.item.itemId);
-    if (index > -1) props.likedItems.splice(index, 1);
+    isLikedLocal.value = false; // optimistic
+    try {
+      await axios.delete('/liked-items', { data: { itemId: props.item.itemId, userId: user.userId } });
+    } catch (e) {
+      isLikedLocal.value = true; // revert
+      console.error('Failed to delete liked item:', e);
+    }
   }
-}
-
-async function createLikedItem(userId) {
-  try { await axios.post('/liked-items', { itemId: props.item.itemId, userId }); }
-  catch (e) { console.error('Failed to create liked item:', e); }
-}
-
-async function deleteLikedItem(userId) {
-  try { await axios.delete('/liked-items', { data: { itemId: props.item.itemId, userId } }); }
-  catch (e) { console.error('Failed to delete liked item:', e); }
 }
 </script>
 
@@ -62,7 +68,7 @@ async function deleteLikedItem(userId) {
       <!-- Like button in the image overlay -->
       <template #overlay>
         <button class="like-btn" @click.prevent.stop="likeItem">
-          <img :src="isLiked ? likeFilled : likeUnfilled" class="like-icon" />
+          <img :src="isLikedLocal ? likeFilled : likeUnfilled" class="like-icon" />
         </button>
       </template>
 

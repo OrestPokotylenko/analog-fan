@@ -1,4 +1,5 @@
 <script setup>
+import { formatDate } from '../../utils/formatters';
 const props = defineProps({
   orders: { type: Array, required: true }
 });
@@ -9,10 +10,6 @@ const paymentStatusColors = { pending: '#f59e0b', paid: '#10b981', failed: '#ef4
 const statusLabels = { pending: '⏳ Pending', processing: '⚙️ Processing', shipped: '🚚 Shipped', delivered: '✅ Delivered', cancelled: '❌ Cancelled' };
 const paymentLabels = { pending: '⏳ Pending', paid: '✅ Paid', failed: '❌ Failed', refunded: '↩️ Refunded' };
 
-function formatDate(d) {
-  if (!d) return 'N/A';
-  return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-}
 </script>
 
 <template>

@@ -33,7 +33,7 @@ const formattedTime = computed(() => {
   
   let date;
   if (typeof props.message.createdAt === 'string') {
-    date = new Date(props.message.createdAt.replace(' ', 'T') + 'Z');
+    date = new Date(props.message.createdAt.replace(/\s/, 'T') + 'Z');
   } else {
     date = new Date(props.message.createdAt);
   }

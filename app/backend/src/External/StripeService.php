@@ -36,7 +36,7 @@ class StripeService {
             $paymentIntent = PaymentIntent::create([
                 'amount' => $amountInCents,
                 'currency' => $currency,
-                'payment_method_types' => ['card', 'ideal'],
+                'payment_method_types' => ['ideal'],
                 'metadata' => $metadata,
             ]);
 

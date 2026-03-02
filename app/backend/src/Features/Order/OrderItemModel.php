@@ -8,15 +8,17 @@ use Exception;
 class OrderItemModel extends BaseModel {
     private string $table = 'order_items';
 
+    private const COLUMNS = 'id, order_id, item_id, quantity, price_at_purchase';
+
     public function getItemsByOrderId(int $orderId) {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE order_id = ? ORDER BY id");
+        $stmt = $this->pdo->prepare("SELECT " . self::COLUMNS . " FROM {$this->table} WHERE order_id = ? ORDER BY id");
         $stmt->execute([$orderId]);
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         return array_map([$this, 'normalizeRow'], $rows);
     }
 
     public function getOrderItemById(int $itemId) {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE id = ? LIMIT 1");
+        $stmt = $this->pdo->prepare("SELECT " . self::COLUMNS . " FROM {$this->table} WHERE id = ? LIMIT 1");
         $stmt->execute([$itemId]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         return $row ? $this->normalizeRow($row) : null;

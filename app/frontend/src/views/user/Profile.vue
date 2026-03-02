@@ -188,6 +188,7 @@ import axios from '../../services/axiosConfig';
 import PageLayout from '../../components/layout/PageLayout.vue';
 import LoadingSpinner from '../../components/ui/LoadingSpinner.vue';
 import { isTokenExpired, clearAuthState } from '../../services/authHelpers';
+import { formatDate } from '../../utils/formatters';
 import { useToast } from '../../composables/useToast';
 
 const router = useRouter();
@@ -346,10 +347,6 @@ async function saveProfile() {
   }
 }
 
-function formatDate(dateString) {
-  if (!dateString) return 'N/A';
-  return dateString;
-}
 </script>
 
 <style scoped>

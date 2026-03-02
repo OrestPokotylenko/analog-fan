@@ -6,8 +6,6 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
-
 const props = defineProps({
   label: {
     type: String,
@@ -25,10 +23,6 @@ const props = defineProps({
     type: String,
     default: 'medium', // small, medium, large
     validator: (value) => ['small', 'medium', 'large'].includes(value)
-  },
-  showIcon: {
-    type: Boolean,
-    default: true
   }
 });
 </script>

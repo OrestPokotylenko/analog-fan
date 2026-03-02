@@ -1,8 +1,8 @@
 <template>
-  <div v-if="show" class="modal-overlay" @click="$emit('close')">
+  <div v-if="show" class="modal-overlay" @click="$emit('close')" role="dialog" aria-modal="true" aria-labelledby="login-prompt-title">
     <div class="modal-content" @click.stop>
       <div class="modal-icon">❤️</div>
-      <h3>Sign in to save to wishlist</h3>
+      <h3 id="login-prompt-title">Sign in to save to wishlist</h3>
       <p>Create an account or log in to save items to your wishlist</p>
       <div class="modal-actions">
         <button @click="$emit('login')" class="btn-login">Log In</button>

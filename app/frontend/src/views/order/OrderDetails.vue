@@ -6,6 +6,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner.vue';
 import OrderService from '../../services/OrderService';
 import axios from '../../services/axiosConfig';
 import { isTokenExpired, clearAuthState } from '../../services/authHelpers';
+import { formatDate, formatPrice } from '../../utils/formatters';
 
 const router = useRouter();
 const route = useRoute();
@@ -64,15 +65,6 @@ async function loadOrderDetails() {
     isLoading.value = false;
   }
 }
-
-function formatDate(dateString) {
-  if (!dateString) return 'N/A';
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
-  });
-}
-
-function formatPrice(price) { return `€${parseFloat(price).toFixed(2)}`; }
 
 function goBack() {
   router.push(isAdmin.value ? '/admin' : '/orders');

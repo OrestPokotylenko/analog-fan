@@ -135,14 +135,9 @@ async function loadMessages(conversationId) {
     const newMessages = await MessageService.getConversationMessages(conversationId);
     messages.value = newMessages;
     previousMessageCount.value = newMessages.length;
-    
+
     // Scroll to bottom after loading messages
     setTimeout(scrollToBottom, 100);
-    
-    // Mark messages as read if user is viewing this conversation
-    if (!document.hidden && conversationId === selectedConversationId.value) {
-      await MessageService.markMessagesAsRead(conversationId, user.userId);
-    }
   } catch (error) {
     console.error('Failed to load messages:', error);
   }

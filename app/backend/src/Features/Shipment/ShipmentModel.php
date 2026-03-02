@@ -8,17 +8,20 @@ use Exception;
 class ShipmentModel extends BaseModel {
     private string $table = 'shipments';
 
+    private const COLUMNS = 'id, order_id, shippo_shipment_id, shippo_transaction_id, carrier, service, tracking_number, tracking_url, label_url, shipping_cost, currency, delivery_status, estimated_delivery_date, shipped_at, delivered_at, tracking_history, created_at, updated_at';
+
     public function getAllShipments() {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} ORDER BY created_at DESC");
+        $stmt = $this->pdo->prepare("SELECT " . self::COLUMNS . " FROM {$this->table} ORDER BY created_at DESC");
         $stmt->execute();
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         return array_map([$this, 'normalizeRow'], $rows);
     }
 
     public function getAllShipmentsWithOrders() {
+        $cols = implode(', ', array_map(fn($c) => 's.' . trim($c), explode(',', self::COLUMNS)));
         $stmt = $this->pdo->prepare("
             SELECT 
-                s.*,
+                {$cols},
                 o.order_number,
                 o.email,
                 o.street,
@@ -38,21 +41,21 @@ class ShipmentModel extends BaseModel {
     }
 
     public function getShipmentById(int $shipmentId) {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE id = ? LIMIT 1");
+        $stmt = $this->pdo->prepare("SELECT " . self::COLUMNS . " FROM {$this->table} WHERE id = ? LIMIT 1");
         $stmt->execute([$shipmentId]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         return $row ? $this->normalizeRow($row) : null;
     }
 
     public function getShipmentByOrderId(int $orderId) {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE order_id = ? LIMIT 1");
+        $stmt = $this->pdo->prepare("SELECT " . self::COLUMNS . " FROM {$this->table} WHERE order_id = ? LIMIT 1");
         $stmt->execute([$orderId]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         return $row ? $this->normalizeRow($row) : null;
     }
 
     public function getShipmentByTrackingNumber(string $trackingNumber) {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE tracking_number = ? LIMIT 1");
+        $stmt = $this->pdo->prepare("SELECT " . self::COLUMNS . " FROM {$this->table} WHERE tracking_number = ? LIMIT 1");
         $stmt->execute([$trackingNumber]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         return $row ? $this->normalizeRow($row) : null;
@@ -132,8 +135,7 @@ class ShipmentModel extends BaseModel {
     }
 
     private function normalizeRow(array $row): array {
-        // Convert snake_case to camelCase for consistency
-        return [
+        $normalized = [
             'id' => (int)$row['id'],
             'order_id' => (int)$row['order_id'],
             'shippo_shipment_id' => $row['shippo_shipment_id'] ?? null,
@@ -154,5 +156,15 @@ class ShipmentModel extends BaseModel {
             'created_at' => $row['created_at'],
             'updated_at' => $row['updated_at'] ?? null,
         ];
+
+        // Include order fields when present (from JOIN queries)
+        $orderFields = ['order_number', 'email', 'street', 'house_number', 'city', 'zip_code', 'country', 'total_amount', 'order_created_at'];
+        foreach ($orderFields as $field) {
+            if (array_key_exists($field, $row)) {
+                $normalized[$field] = $row[$field];
+            }
+        }
+
+        return $normalized;
     }
 }

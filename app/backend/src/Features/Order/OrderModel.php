@@ -8,30 +8,33 @@ use Exception;
 class OrderModel extends BaseModel {
     private string $table = 'orders';
 
+    private const COLUMNS = 'id, user_id, order_number, email, phone_number, street, house_number, city, zip_code, country, subtotal, tax_amount, shipping_cost, total_amount, payment_method, payment_status, transaction_id, order_status, tracking_number, shipped_at, delivered_at, created_at, updated_at';
+
     public function getAllOrders() {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} ORDER BY created_at DESC");
+        $stmt = $this->pdo->prepare("SELECT " . self::COLUMNS . " FROM {$this->table} ORDER BY created_at DESC");
         $stmt->execute();
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         return array_map([$this, 'normalizeRow'], $rows);
     }
 
     public function getOrdersByUserId(int $userId) {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE user_id = ? ORDER BY created_at DESC");
+        $stmt = $this->pdo->prepare("SELECT " . self::COLUMNS . " FROM {$this->table} WHERE user_id = ? ORDER BY created_at DESC");
         $stmt->execute([$userId]);
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         return array_map([$this, 'normalizeRow'], $rows);
     }
 
     public function getOrderById(int $orderId) {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE id = ? LIMIT 1");
+        $stmt = $this->pdo->prepare("SELECT " . self::COLUMNS . " FROM {$this->table} WHERE id = ? LIMIT 1");
         $stmt->execute([$orderId]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         return $row ? $this->normalizeRow($row) : null;
     }
 
     public function getOrderWithUser(int $orderId) {
+        $cols = implode(', ', array_map(fn($c) => 'o.' . trim($c), explode(',', self::COLUMNS)));
         $stmt = $this->pdo->prepare("
-            SELECT o.*, u.first_name, u.last_name, u.email as user_email
+            SELECT {$cols}, u.first_name, u.last_name, u.email as user_email
             FROM {$this->table} o
             LEFT JOIN users u ON o.user_id = u.user_id
             WHERE o.id = ? LIMIT 1
@@ -43,8 +46,9 @@ class OrderModel extends BaseModel {
 
     // Get orders containing items sold by a specific user (seller)
     public function getOrdersBySellerId(int $sellerId) {
+        $cols = implode(', ', array_map(fn($c) => 'o.' . trim($c), explode(',', self::COLUMNS)));
         $stmt = $this->pdo->prepare("
-            SELECT DISTINCT o.*
+            SELECT DISTINCT {$cols}
             FROM {$this->table} o
             INNER JOIN order_items oi ON o.id = oi.order_id
             INNER JOIN items i ON oi.item_id = i.item_id
@@ -58,7 +62,7 @@ class OrderModel extends BaseModel {
     }
 
     public function getOrderByOrderNumber(string $orderNumber) {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE order_number = ? LIMIT 1");
+        $stmt = $this->pdo->prepare("SELECT " . self::COLUMNS . " FROM {$this->table} WHERE order_number = ? LIMIT 1");
         $stmt->execute([$orderNumber]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         return $row ? $this->normalizeRow($row) : null;

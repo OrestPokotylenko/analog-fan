@@ -9,7 +9,7 @@ defineEmits(['close']);
 
 <template>
   <Teleport to="body">
-    <div v-if="show" class="modal-overlay" @click="$emit('close')">
+    <div v-if="show" class="modal-overlay" @click="$emit('close')" role="dialog" aria-modal="true" :aria-label="title">
       <div class="modal-content" :style="{ maxWidth }" @click.stop>
         <div class="modal-header">
           <h2>{{ title }}</h2>

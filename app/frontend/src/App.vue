@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, watch, inject } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import NotificationToast from './components/common/NotificationToast.vue';
 import WebSocketService from './services/WebSocketService';
@@ -8,25 +8,21 @@ import MessageService from './services/MessageService';
 const router = useRouter();
 const route = useRoute();
 const notificationToast = ref(null);
-const user = computed(() => JSON.parse(localStorage.getItem('user')));
+const $auth = inject('$auth');
+let wsHandlerRegistered = false;
 
-// WebSocket message handler
 const handleWebSocketMessage = async (data) => {
   if (data.type === 'new_message') {
     const conversationId = data.conversationId;
     const message = data.message;
     
-    // Skip if we're the sender
-    if (message.senderId === user.value?.userId) {
+    if (message.senderId == $auth.user?.userId) {
       return;
     }
     
-    // Don't show notifications if we're on the messages page at all (list or specific conversation)
     const isOnMessagesPage = route.path.startsWith('/messages');
     
-    // Only show notification if NOT on messages page
     if (!isOnMessagesPage) {
-      // Get conversation details for better notification
       let conversationDetails = null;
       try {
         conversationDetails = await MessageService.getConversation(conversationId);
@@ -38,7 +34,6 @@ const handleWebSocketMessage = async (data) => {
       const messageText = message.messageText || 'New message';
       const itemTitle = conversationDetails?.itemTitle || '';
       
-      // Show in-app toast notification
       if (notificationToast.value) {
         notificationToast.value.showNotification(
           conversationId,
@@ -48,14 +43,22 @@ const handleWebSocketMessage = async (data) => {
         );
       }
       
-      // Show browser notification
       showBrowserNotification(conversationId, senderUsername, messageText, itemTitle);
     }
     
-    // Trigger header unread count update
     window.dispatchEvent(new CustomEvent('messages-updated'));
   }
 };
+
+function connectWebSocket() {
+  if ($auth.user?.userId && !wsHandlerRegistered) {
+    if (!WebSocketService.isConnected()) {
+      WebSocketService.connect($auth.user.userId);
+    }
+    WebSocketService.onMessage(handleWebSocketMessage);
+    wsHandlerRegistered = true;
+  }
+}
 
 function showBrowserNotification(conversationId, senderUsername, messageText, itemTitle) {
   if ('Notification' in window && Notification.permission === 'granted') {
@@ -65,7 +68,7 @@ function showBrowserNotification(conversationId, senderUsername, messageText, it
       icon: '/favicon.ico',
       tag: `conversation-${conversationId}`,
       requireInteraction: false,
-      data: { conversationId } // Store conversationId in notification
+      data: { conversationId }
     });
 
     notification.onclick = () => {
@@ -74,7 +77,6 @@ function showBrowserNotification(conversationId, senderUsername, messageText, it
       notification.close();
     };
 
-    // Auto close after 5 seconds
     setTimeout(() => {
       notification.close();
     }, 5000);
@@ -82,20 +84,25 @@ function showBrowserNotification(conversationId, senderUsername, messageText, it
 }
 
 onMounted(() => {
-  // Request notification permission if not already granted
   if ('Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission();
   }
   
-  // Initialize WebSocket if user is logged in
-  if (user.value?.userId) {
-    WebSocketService.connect(user.value.userId);
-    WebSocketService.onMessage(handleWebSocketMessage);
-  }
+  connectWebSocket();
 });
+
+watch(
+  () => $auth.isLoggedIn,
+  (loggedIn) => {
+    if (loggedIn) {
+      connectWebSocket();
+    }
+  }
+);
 
 onUnmounted(() => {
   WebSocketService.removeMessageHandler(handleWebSocketMessage);
+  wsHandlerRegistered = false;
 });
 </script>
 

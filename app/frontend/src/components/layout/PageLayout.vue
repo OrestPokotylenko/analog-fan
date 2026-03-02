@@ -18,7 +18,7 @@ defineProps({
 
 <style scoped>
 .page-layout {
-  padding-top: 70px;
+  padding-top: 66px;
   background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
   min-height: 100vh;
 }

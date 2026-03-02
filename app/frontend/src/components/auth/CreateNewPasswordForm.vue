@@ -15,6 +15,7 @@
             v-model="password" 
             class="form-input"
             placeholder="Enter new password"
+            autocomplete="new-password"
             required 
           />
         </div>
@@ -27,6 +28,7 @@
             v-model="repeatPassword" 
             class="form-input"
             placeholder="Confirm password"
+            autocomplete="new-password"
             required 
           />
         </div>
@@ -80,11 +82,10 @@ export default {
           password: this.password
         });
 
-        console.log(response);
         this.$router.push('/login');
 
       } catch (error) {
-        this.errorMessage = 'Error during password reseet. Please try again.';
+        this.errorMessage = 'Error during password reset. Please try again.';
       } finally {
         this.isSubmitting = false;
       }

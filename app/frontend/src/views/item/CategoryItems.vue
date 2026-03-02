@@ -29,10 +29,10 @@ onMounted(async () => {
   await fetchLikedItems();
 });
 
-watch(() => route.params.typeName, (newTypeName) => {
+watch(() => route.params.typeName, async (newTypeName) => {
   categoryType.value = newTypeName || '';
-  matchTypeNameToId();
-  fetchItemsByType();
+  await matchTypeNameToId();
+  await fetchItemsByType();
   clearFilters();
 });
 

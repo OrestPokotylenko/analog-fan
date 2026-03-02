@@ -30,12 +30,12 @@
 
         <div class="form-group">
           <label for="password" class="form-label">Password</label>
-          <input type="password" id="password" v-model="password" class="form-input" placeholder="Enter password" required />
+          <input type="password" id="password" v-model="password" class="form-input" placeholder="Enter password" autocomplete="new-password" required />
         </div>
 
         <div class="form-group">
           <label for="repeatPassword" class="form-label">Confirm Password</label>
-          <input type="password" id="repeatPassword" v-model="repeatPassword" class="form-input" placeholder="Confirm password" required />
+          <input type="password" id="repeatPassword" v-model="repeatPassword" class="form-input" placeholder="Confirm password" autocomplete="new-password" required />
         </div>
 
         <button type="submit" class="btn-signup" :disabled="isSigningUp">

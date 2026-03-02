@@ -26,7 +26,7 @@
             <div class="rate-details">
               <div class="rate-header">
                 <span class="carrier">{{ rate.carrier }}</span>
-                <span class="price">${{ rate.amount }} {{ rate.currency }}</span>
+                <span class="price">{{ rate.amount }} {{ rate.currency }}</span>
               </div>
               <div class="rate-service">{{ rate.service }}</div>
               <div class="rate-delivery" v-if="rate.estimated_days">

@@ -7,15 +7,17 @@ use App\Core\BaseModel;
 class ProductTypeModel extends BaseModel {
     private string $table = 'product_types';
 
+    private const COLUMNS = 'product_type_id, name, image_url, supports_genre';
+
     public function getProductTypes() {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table}");
+        $stmt = $this->pdo->prepare("SELECT " . self::COLUMNS . " FROM {$this->table}");
         $stmt->execute();
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         return array_map([$this, 'normalizeRow'], $rows);
     }
 
     public function fetchProductTypeById(int $productTypeId) {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE product_type_id = ? LIMIT 1");
+        $stmt = $this->pdo->prepare("SELECT " . self::COLUMNS . " FROM {$this->table} WHERE product_type_id = ? LIMIT 1");
         $stmt->execute([$productTypeId]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         return $row ? $this->normalizeRow($row) : null;

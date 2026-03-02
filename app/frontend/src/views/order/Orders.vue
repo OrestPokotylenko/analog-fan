@@ -11,6 +11,7 @@ import OrderService from '../../services/OrderService';
 import PaymentService from '../../services/PaymentService';
 import CartService from '../../services/CartService';
 import { isTokenExpired, clearAuthState } from '../../services/authHelpers';
+import { formatDate, formatPrice } from '../../utils/formatters';
 
 const router = useRouter();
 const route = useRoute();
@@ -118,22 +119,6 @@ async function loadOrders() {
   } finally {
     isLoading.value = false;
   }
-}
-
-function formatDate(dateString) {
-  if (!dateString) return 'N/A';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-}
-
-function formatPrice(price) {
-  return `€${parseFloat(price).toFixed(2)}`;
 }
 
 function viewOrderDetails(orderId) {

@@ -6,17 +6,19 @@ use App\Core\BaseModel;
 use PDOException;
 
 class UserModel extends BaseModel {
+    /** Columns needed for UserDTO — excludes password */
+    private const COLUMNS = 'user_id, first_name, last_name, username, email, role, phone_number, image_url, created_at';
+
     public function userExists($username, $email) {
-        $sql = "SELECT * FROM users WHERE username = :username OR email = :email";
+        $sql = "SELECT 1 FROM users WHERE username = :username OR email = :email LIMIT 1";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(array('username' => $username, 'email' => $email));
-        $userData = $stmt->fetch();
 
-        return $userData ? true : false;
+        return $stmt->fetchColumn() !== false;
     }
 
     public function getUsers() {
-        $sql = "SELECT * FROM users";
+        $sql = "SELECT user_id, first_name, last_name, username, email, role, phone_number, image_url, created_at FROM users";
         $stmt = $this->pdo->query($sql);
         $stmt->execute();
         $usersData = $stmt->fetchAll();
@@ -42,7 +44,7 @@ class UserModel extends BaseModel {
     }
 
     public function getUserById(int $userId) {
-        $sql = "SELECT * FROM users WHERE user_id = :user_id";
+        $sql = "SELECT " . self::COLUMNS . " FROM users WHERE user_id = :user_id";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['user_id' => $userId]);
         $userData = $stmt->fetch();
@@ -136,7 +138,7 @@ class UserModel extends BaseModel {
     }
 
     public function getUserByEmail($email) {
-        $sql = "SELECT * FROM users WHERE email = :email";
+        $sql = "SELECT " . self::COLUMNS . " FROM users WHERE email = :email";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['email' => $email]);
         $userData = $stmt->fetch();

@@ -7,6 +7,8 @@ class WebSocketService {
     this.messageHandlers = [];
     this.isAuthenticated = false;
     this.userId = null;
+    this.reconnectAttempts = 0;
+    this.maxReconnectAttempts = 10;
   }
 
   connect(userId) {
@@ -20,6 +22,7 @@ class WebSocketService {
 
     this.ws.onopen = () => {
       console.log('WebSocket connected');
+      this.reconnectAttempts = 0;
       this.authenticate();
       if (this.reconnectTimer) {
         clearTimeout(this.reconnectTimer);
@@ -62,13 +65,21 @@ class WebSocketService {
     if (this.reconnectTimer) {
       return;
     }
-    console.log('Scheduling reconnect in', this.reconnectInterval, 'ms');
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      console.warn('WebSocket: max reconnect attempts reached, giving up.');
+      return;
+    }
+    this.reconnectAttempts++;
+    // Exponential backoff capped at 30s
+    const delay = Math.min(this.reconnectInterval * this.reconnectAttempts, 30000);
+    console.log(`Scheduling reconnect attempt ${this.reconnectAttempts} in ${delay}ms`);
     this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null;
       if (this.userId) {
         console.log('Attempting to reconnect...');
         this.connect(this.userId);
       }
-    }, this.reconnectInterval);
+    }, delay);
   }
 
   sendMessage(conversationId, senderId, messageText) {

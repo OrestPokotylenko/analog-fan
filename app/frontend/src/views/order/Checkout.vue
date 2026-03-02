@@ -17,9 +17,8 @@ const isProcessing = ref(false);
 const errorMessage = ref('');
 const paymentElements = ref(null);
 const paymentElement = ref(null);
-const clientSecret = ref('');
 const createdOrder = ref(null);
-const selectedPaymentMethod = ref('card');
+const selectedPaymentMethod = ref('ideal');
 
 // Form data
 const formData = ref({
@@ -50,13 +49,22 @@ onMounted(async () => {
     return;
   }
 
-  await loadCart();
-  await initializeStripe();
-  
   // Pre-fill email from user data
   const user = JSON.parse(localStorage.getItem('user'));
   if (user && user.email) {
     formData.value.email = user.email;
+  }
+
+  // Load cart and Stripe SDK in parallel — they're independent
+  await Promise.all([
+    loadCart(),
+    PaymentService.initialize()
+  ]);
+
+  // Mount payment element in deferred-intent mode (no backend call needed)
+  // The form renders instantly using just the amount from the cart.
+  if (cartItems.value.length > 0) {
+    await mountPaymentElement();
   }
 });
 
@@ -103,30 +111,20 @@ const total = computed(() => {
   return subtotal.value + taxAmount.value + shipping;
 });
 
-async function initializeStripe() {
+async function mountPaymentElement() {
   try {
-    await PaymentService.initialize();
-    
-    // Create payment intent immediately
-    const paymentIntent = await PaymentService.createPaymentIntent(
-      total.value,
-      null // No order ID yet
-    );
-    
-    clientSecret.value = paymentIntent.clientSecret;
-    
-    // Initialize payment elements
-    const { elements, paymentElement: element } = await PaymentService.createCheckoutSession(clientSecret.value);
+    // Deferred-intent mode: no PaymentIntent call needed — form renders instantly
+    const { elements, paymentElement: element } = await PaymentService.createDeferredElements(total.value);
     paymentElements.value = elements;
     paymentElement.value = element;
-    
+
     // Listen for payment method changes
     element.on('change', (event) => {
       if (event.value?.type) {
         selectedPaymentMethod.value = event.value.type;
       }
     });
-    
+
     // Mount payment element
     const container = document.getElementById('payment-element');
     if (container) {
@@ -174,7 +172,7 @@ async function placeOrder() {
       tax_amount: taxAmount.value,
       shipping_cost: shipping,
       total_amount: total.value,
-      payment_method: selectedPaymentMethod.value === 'card' ? 'Credit Card' : selectedPaymentMethod.value === 'ideal' ? 'iDEAL' : selectedPaymentMethod.value === 'google_pay' ? 'Google Pay' : 'Other',
+      payment_method: 'iDEAL',
       payment_status: 'pending',
       order_status: 'processing'
     };
@@ -206,7 +204,13 @@ async function placeOrder() {
       },
     };
     
-    const paymentResult = await PaymentService.processPaymentWithElements(paymentElements.value, billingDetails);
+    // Deferred-intent flow: validate form → create PaymentIntent → confirm
+    const paymentResult = await PaymentService.confirmDeferredPayment(
+      paymentElements.value,
+      total.value,
+      billingDetails,
+      createdOrder.value.id
+    );
     
     // Update order status with transaction ID
     await OrderService.updateOrderStatus(createdOrder.value.id, {
@@ -382,7 +386,7 @@ function goBack() {
 
             <button 
               @click="placeOrder" 
-              :disabled="isProcessing || !clientSecret"
+              :disabled="isProcessing || !paymentElements"
               class="btn-place-order"
             >
               {{ isProcessing ? 'Processing Payment...' : 'Place Order' }}
@@ -423,9 +427,6 @@ function goBack() {
 .btn-back:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-}
-
-  margin: 0 auto 1rem;
 }
 
 .checkout-content {
@@ -681,6 +682,11 @@ function goBack() {
   padding: 20px;
   border-radius: 8px;
   min-height: 200px;
+}
+
+/* Hide the "Powered by Stripe" / "Stripe for developers" link */
+.payment-element-container :deep(a[href*="stripe.com"]) {
+  display: none !important;
 }
 
 .btn-create-order {

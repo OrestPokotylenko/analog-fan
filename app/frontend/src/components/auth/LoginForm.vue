@@ -79,6 +79,7 @@ async function handleLogin() {
             v-model="password" 
             class="form-input"
             placeholder="Enter your password"
+            autocomplete="current-password"
             required 
           />
         </div>

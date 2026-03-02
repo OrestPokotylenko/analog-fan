@@ -8,13 +8,15 @@ use Exception;
 class ConversationModel extends BaseModel {
     private string $table = 'conversations';
 
+    private const COLUMNS = 'conversation_id, item_id, buyer_id, seller_id, created_at, updated_at';
+
     /**
      * Get or create a conversation between buyer and seller for an item
      */
     public function getOrCreateConversation($itemId, $buyerId, $sellerId) {
         // Check if conversation already exists
         $stmt = $this->pdo->prepare(
-            "SELECT * FROM {$this->table} 
+            "SELECT conversation_id, item_id, buyer_id, seller_id, created_at, updated_at FROM {$this->table} 
              WHERE item_id = ? AND buyer_id = ? AND seller_id = ? 
              LIMIT 1"
         );
@@ -42,8 +44,9 @@ class ConversationModel extends BaseModel {
      * Get conversation by ID
      */
     public function getConversationById($conversationId) {
+        $cols = implode(', ', array_map(fn($c) => 'c.' . trim($c), explode(',', self::COLUMNS)));
         $sql = "SELECT 
-                    c.*,
+                    {$cols},
                     i.title as item_title,
                     i.images as item_images,
                     i.price as item_price,
@@ -76,8 +79,9 @@ class ConversationModel extends BaseModel {
      * Get all conversations for a user with additional details
      */
     public function getUserConversations($userId) {
+        $cols = implode(', ', array_map(fn($c) => 'c.' . trim($c), explode(',', self::COLUMNS)));
         $sql = "SELECT 
-                    c.*,
+                    {$cols},
                     i.title as item_title,
                     i.images as item_images,
                     i.price as item_price,

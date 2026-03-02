@@ -96,11 +96,15 @@
 import { ref, computed, onMounted, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import CartService from '../../services/CartService';
+import PaymentService from '../../services/PaymentService';
 import PageLayout from '../../components/layout/PageLayout.vue';
 import CartItem from '../../components/cart/CartItem.vue';
 import CartSummary from '../../components/cart/CartSummary.vue';
 import { isTokenExpired, clearAuthState } from '../../services/authHelpers';
 import { useToast } from '../../composables/useToast';
+
+// Preload Stripe SDK while user is browsing their cart
+PaymentService.preload();
 
 const router = useRouter();
 const $auth = inject('$auth');

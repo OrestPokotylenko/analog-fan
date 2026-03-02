@@ -8,6 +8,8 @@ use Exception;
 class MessageModel extends BaseModel {
     private string $table = 'messages';
 
+    private const COLUMNS = 'message_id, conversation_id, sender_id, message_text, is_read, created_at';
+
     /**
      * Create a new message
      */
@@ -28,7 +30,7 @@ class MessageModel extends BaseModel {
      * Get message by ID
      */
     public function getMessageById($messageId) {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE message_id = ? LIMIT 1");
+        $stmt = $this->pdo->prepare("SELECT " . self::COLUMNS . " FROM {$this->table} WHERE message_id = ? LIMIT 1");
         $stmt->execute([$messageId]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         return $row ? $this->normalizeRow($row) : null;
@@ -38,7 +40,8 @@ class MessageModel extends BaseModel {
      * Get all messages for a conversation
      */
     public function getConversationMessages($conversationId) {
-        $sql = "SELECT m.*, u.username as sender_username
+        $cols = implode(', ', array_map(fn($c) => 'm.' . trim($c), explode(',', self::COLUMNS)));
+        $sql = "SELECT {$cols}, u.username as sender_username
                 FROM {$this->table} m
                 LEFT JOIN users u ON m.sender_id = u.user_id
                 WHERE m.conversation_id = ?

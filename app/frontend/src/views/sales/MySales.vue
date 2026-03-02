@@ -5,6 +5,7 @@ import PageLayout from '../../components/layout/PageLayout.vue';
 import LoadingSpinner from '../../components/ui/LoadingSpinner.vue';
 import axios from '../../services/axiosConfig';
 import { isTokenExpired, clearAuthState } from '../../services/authHelpers';
+import { formatDate } from '../../utils/formatters';
 import { useToast } from '../../composables/useToast';
 
 const router = useRouter();
@@ -23,14 +24,6 @@ function showToast(message, type = 'success') {
   toastType.value = type;
   _showToast(message, 3500);
 }
-
-const statusColors = {
-  pending: '#f59e0b',
-  processing: '#3b82f6',
-  shipped: '#8b5cf6',
-  delivered: '#10b981',
-  cancelled: '#ef4444'
-};
 
 const shipmentStatusColors = {
   label_created: '#3b82f6',
@@ -86,21 +79,8 @@ async function loadData() {
   }
 }
 
-function formatDate(dateString) {
-  if (!dateString) return 'N/A';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-}
-
 function downloadLabel(shipmentId) {
-  // Use full URL to avoid Vue Router interference
-  window.open(`http://localhost/api/shipments/${shipmentId}/label`, '_blank');
+  window.open(`/api/shipments/${shipmentId}/label`, '_blank');
 }
 
 function trackShipment(trackingUrl) {
@@ -145,7 +125,7 @@ async function testStatusChange(shipment) {
   </Transition>
   <div class="my-sales-page">
     <div class="sales-header">
-      <h1>📦 My Sales</h1>
+      <h1><span class="emoji">📦</span> My Sales</h1>
       <p class="subtitle">Track shipments for items you've sold</p>
     </div>
 
@@ -263,6 +243,11 @@ async function testStatusChange(shipment) {
   background-clip: text;
 }
 
+.sales-header h1 .emoji {
+  -webkit-text-fill-color: initial;
+  background: none;
+}
+
 .subtitle {
   color: #a0a0a0;
   font-size: 1.1rem;
@@ -357,8 +342,7 @@ async function testStatusChange(shipment) {
 }
 
 .tracking-link {
- 
- color: #667eea;
+  color: #667eea;
   text-decoration: none;
   font-weight: 600;
   transition: color 0.3s;

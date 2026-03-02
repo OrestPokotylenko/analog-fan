@@ -8,30 +8,36 @@ use Exception;
 class ItemModel extends BaseModel {
     private string $table = 'items';
 
+    /** All columns — used for single-item detail responses */
+    private const COLUMNS = 'item_id, user_id, title, description, price, product_type_id, images, quantity, item_condition, genre, creation_date';
+
+    /** Minimal columns — used for list/grid responses (home, category, my-items) */
+    private const LIST_COLUMNS = 'item_id, user_id, title, price, product_type_id, item_condition, genre, images';
+
     public function getItems($userId = null) {
         if ($userId === null) {
-            $stmt = $this->pdo->prepare("SELECT * FROM {$this->table}");
+            $stmt = $this->pdo->prepare("SELECT " . self::LIST_COLUMNS . " FROM {$this->table}");
             $stmt->execute();
         } else {
-            $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE user_id != ?");
+            $stmt = $this->pdo->prepare("SELECT " . self::LIST_COLUMNS . " FROM {$this->table} WHERE user_id != ?");
             $stmt->execute([$userId]);
         }
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        return array_map([$this, 'normalizeRow'], $rows);
+        return array_map([$this, 'normalizeSummaryRow'], $rows);
     }
 
     public function fetchItemById($id) {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE item_id = ? LIMIT 1");
+        $stmt = $this->pdo->prepare("SELECT " . self::COLUMNS . " FROM {$this->table} WHERE item_id = ? LIMIT 1");
         $stmt->execute([$id]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         return $row ? $this->normalizeRow($row) : null;
     }
 
     public function fetchUserItems($userId) {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE user_id = ?");
+        $stmt = $this->pdo->prepare("SELECT " . self::LIST_COLUMNS . " FROM {$this->table} WHERE user_id = ?");
         $stmt->execute([$userId]);
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        return array_map([$this, 'normalizeRow'], $rows);
+        return array_map([$this, 'normalizeSummaryRow'], $rows);
     }
 
     public function postItem($userId, $title, $description, $price, $type, $imagesPath, $quantity = 1, $condition = 'good', $genre = null) {
@@ -83,10 +89,10 @@ class ItemModel extends BaseModel {
     }
 
     public function getItemsByType($type) {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE product_type_id = ?");
+        $stmt = $this->pdo->prepare("SELECT " . self::LIST_COLUMNS . " FROM {$this->table} WHERE product_type_id = ?");
         $stmt->execute([$type]);
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        return array_map([$this, 'normalizeRow'], $rows);
+        return array_map([$this, 'normalizeSummaryRow'], $rows);
     }
 
     public function decrementQuantity($itemId, $quantity) {
@@ -104,6 +110,27 @@ class ItemModel extends BaseModel {
         return $this->fetchItemById($itemId);
     }
 
+    /**
+     * Minimal payload for list/grid views — drops description, quantity, createdAt.
+     * Callers: getItems(), getItemsByType(), fetchUserItems()
+     */
+    private function normalizeSummaryRow(array $row): array {
+        return [
+            'itemId'        => (int)($row['item_id'] ?? 0),
+            'userId'        => (int)($row['user_id'] ?? 0),
+            'title'         => $row['title'] ?? '',
+            'price'         => is_numeric($row['price'] ?? 0) ? (float)$row['price'] : 0.0,
+            'productTypeId' => (int)($row['product_type_id'] ?? 0),
+            'condition'     => $row['item_condition'] ?? 'good',
+            'genre'         => $row['genre'] ?? null,
+            'imagesPath'    => $this->decodeImages($row['images'] ?? '[]'),
+        ];
+    }
+
+    /**
+     * Full payload for single-item detail views.
+     * Callers: fetchItemById(), decrementQuantity()
+     */
     private function normalizeRow(array $row): array {
         return [
             'itemId'        => (int)($row['item_id'] ?? 0),
@@ -112,7 +139,6 @@ class ItemModel extends BaseModel {
             'description'   => $row['description'] ?? '',
             'price'         => is_numeric($row['price'] ?? 0) ? (float)$row['price'] : 0.0,
             'productTypeId' => (int)($row['product_type_id'] ?? 0),
-            'type'          => $row['type'] ?? '',
             'quantity'      => (int)($row['quantity'] ?? 1),
             'condition'     => $row['item_condition'] ?? 'good',
             'genre'         => $row['genre'] ?? null,

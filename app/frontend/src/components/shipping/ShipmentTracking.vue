@@ -25,12 +25,12 @@
       
       <div class="info-row" v-if="shipment.shippedAt">
         <span class="label">Shipped On:</span>
-        <span class="value">{{ formatDate(shipment.shippedAt) }}</span>
+        <span class="value">{{ formatDate(shipment.shippedAt, false) }}</span>
       </div>
       
       <div class="info-row" v-if="shipment.deliveredAt">
         <span class="label">Delivered On:</span>
-        <span class="value">{{ formatDate(shipment.deliveredAt) }}</span>
+        <span class="value">{{ formatDate(shipment.deliveredAt, false) }}</span>
       </div>
     </div>
 
@@ -74,7 +74,7 @@
           <div class="timeline-content">
             <p class="event-status">{{ event.status_details || event.status }}</p>
             <p class="event-location" v-if="event.location">{{ event.location }}</p>
-            <p class="event-date">{{ formatDateTime(event.status_date) }}</p>
+            <p class="event-date">{{ formatDate(event.status_date) }}</p>
           </div>
         </div>
       </div>
@@ -96,6 +96,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
+import { formatDate } from '../../utils/formatters';
 
 const props = defineProps({
   orderId: {
@@ -181,28 +182,6 @@ function formatStatus(status) {
     'unknown': 'Unknown',
   };
   return statusMap[status] || status;
-}
-
-function formatDate(dateString) {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  });
-}
-
-function formatDateTime(dateString) {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toLocaleString('en-US', { 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 }
 </script>
 

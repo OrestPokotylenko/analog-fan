@@ -7,7 +7,7 @@
     <div class="item-details">
       <h3>{{ item.title }}</h3>
       <p class="item-quantity">Quantity: {{ item.quantity }}</p>
-      <p class="item-price">€{{ item.price.toFixed(2) }}</p>
+      <p class="item-price">€{{ parseFloat(item.price || 0).toFixed(2) }}</p>
     </div>
     <button 
       @click="$emit('remove', item.id)" 

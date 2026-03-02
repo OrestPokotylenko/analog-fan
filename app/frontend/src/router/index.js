@@ -34,20 +34,22 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('jwtToken');
   const user = JSON.parse(localStorage.getItem('user') || 'null');
-  
+  // Compute once so isTokenExpired is never called twice per navigation
+  const tokenExpired = token ? isTokenExpired(token) : true;
+
   // Check if token is expired and clear auth state immediately
-  if (token && isTokenExpired(token)) {
+  if (token && tokenExpired) {
     clearAuthState();
     if (to.path !== '/login' && to.path !== '/signup' && to.path !== '/reset-password' && to.path !== '/') {
       return next('/login');
     }
   }
-  
+
   // Protected routes that require login
   const protectedRoutes = ['/profile', '/cart', '/checkout', '/order-confirmation', '/orders', '/my-items', '/my-sales', '/wishlist', '/messages', '/admin'];
   const isProtectedRoute = protectedRoutes.some(route => to.path.startsWith(route));
-  
-  if (isProtectedRoute && (!token || isTokenExpired(token))) {
+
+  if (isProtectedRoute && (!token || tokenExpired)) {
     return next('/login');
   }
   

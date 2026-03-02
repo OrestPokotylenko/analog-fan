@@ -16,18 +16,22 @@ class PasswordResetService {
         $this->linkModel = new LinkModel();
     }
 
-    public function requestPasswordReset($email) {
+    public function requestPasswordReset(string $email): bool {
         $user = $this->userModel->getUserByEmail($email);
 
         if (!$user) {
             return false;
         }
 
+        // Invalidate any existing unused tokens for this user
+        $this->linkModel->expireLinksForUser($user->userId);
+
         $token = bin2hex(random_bytes(50));
         $linkDto = new LinkDTO($user->userId, $token, 0);
         $this->linkModel->addLink($linkDto);
 
-        $resetLink = 'http://localhost:5173/reset-password?token=' . $token;
+        $frontendUrl = $_ENV['FRONTEND_URL'] ?? 'http://localhost:5173';
+        $resetLink = $frontendUrl . '/reset-password?token=' . $token;
         $this->sendPasswordResetEmail($user->email, $resetLink);
 
         return true;

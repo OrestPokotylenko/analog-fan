@@ -6,8 +6,15 @@ export function isTokenExpired(token) {
     const parts = token.split('.');
     if (parts.length !== 3) return true;
     
-    // Decode the payload (second part)
-    const payload = JSON.parse(atob(parts[1]));
+    // Decode the payload (second part) — handle Unicode-safe base64
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    const payload = JSON.parse(jsonPayload);
     
     // Check if token has expiration
     if (!payload.exp) return false;

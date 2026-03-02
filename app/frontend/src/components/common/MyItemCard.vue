@@ -6,9 +6,10 @@ const props = defineProps({
     type: Object,
     required: true
   },
+  // likedItems is passed down by ItemsGrid but not used in this card
   likedItems: {
     type: Array,
-    required: true
+    default: () => []
   }
 });
 </script>

@@ -49,7 +49,7 @@ const formattedTime = computed(() => {
   
   let date;
   if (typeof props.conversation.lastMessageTime === 'string') {
-    date = new Date(props.conversation.lastMessageTime.replace(' ', 'T') + 'Z');
+    date = new Date(props.conversation.lastMessageTime.replace(/\s/, 'T') + 'Z');
   } else {
     date = new Date(props.conversation.lastMessageTime);
   }

@@ -5,7 +5,7 @@ namespace App\Features\ShoppingCart;
 use App\Core\BaseModel;
 
 class ShoppingCartItemModel extends BaseModel {
-    private string $table = 'shopping_carts';
+    private string $table = 'shopping_cart_items';
 
     public function addItemToCart($shoppingCartId, $itemId, $quantity): ShoppingCartItemDto {
         $sql = "INSERT INTO shopping_cart_items (shopping_cart_id, item_id, quantity)
@@ -24,7 +24,7 @@ class ShoppingCartItemModel extends BaseModel {
     }
 
     public function fetchCartItemById($id): ?ShoppingCartItemDto {
-        $stmt = $this->pdo->prepare("SELECT * FROM shopping_cart_items WHERE id = ? LIMIT 1");
+        $stmt = $this->pdo->prepare("SELECT id, shopping_cart_id, item_id, quantity, added_at FROM shopping_cart_items WHERE id = ? LIMIT 1");
         $stmt->execute([$id]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         if (!$row) return null;
@@ -44,7 +44,6 @@ class ShoppingCartItemModel extends BaseModel {
                     sci.quantity,
                     sci.added_at,
                     i.title,
-                    i.description,
                     i.price,
                     i.images,
                     i.user_id as seller_id
@@ -59,7 +58,6 @@ class ShoppingCartItemModel extends BaseModel {
             $dto = ShoppingCartItemDto::toDTO($row);
             // Add item details to DTO
             $dto->title = $row['title'] ?? '';
-            $dto->description = $row['description'] ?? '';
             $dto->price = (float)($row['price'] ?? 0);
             $dto->images = $this->decodeImages($row['images'] ?? '[]');
             $dto->sellerId = (int)($row['seller_id'] ?? 0);

@@ -1,14 +1,11 @@
 <script setup>
+import { formatDate } from '../../utils/formatters';
 defineProps({
   users: { type: Array, required: true },
   isDeleting: { type: Boolean, default: false }
 });
 defineEmits(['delete']);
 
-function formatDate(d) {
-  if (!d) return 'N/A';
-  return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-}
 </script>
 
 <template>

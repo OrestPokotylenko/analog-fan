@@ -32,3 +32,10 @@ I implemented a **Mock Webhook Testing Interface** directly in the application. 
 - All users (buyer/seller roles) have the ability to both purchase and sell items on the platform
 - Shipments are automatically created when orders are marked as paid
 - Email notifications are sent to buyers and sellers at various stages of the order process. To test this functionality, you will need to create new users with valid email addresses or update existing user email addresses
+
+
+## Application Startup
+- From app/backend folder run 'composer install'
+- From app/frontend folder run 'npm install'
+- From app/backend folder run 'docker compose up --build'
+- From app/frontend folder run 'npm run dev'

@@ -5,6 +5,7 @@ import axios from '../../services/axiosConfig';
 import PageLayout from '../../components/layout/PageLayout.vue';
 import ItemCard from '../../components/common/ItemCard.vue';
 import FilterPanel from '../../components/items/FilterPanel.vue';
+import Pagination from '../../components/ui/Pagination.vue';
 import { useItemFilters } from '../../composables/useItemFilters';
 
 const route = useRoute();
@@ -15,6 +16,10 @@ const errorMessage = ref('');
 const categoryType = ref('');
 const productTypeId = ref(null);
 const productTypes = ref([]);
+const currentPage = ref(1);
+const totalPages = ref(1);
+const totalItems = ref(0);
+const itemsPerPage = 20;
 
 const {
   minPrice, maxPrice, selectedConditions, selectedTypes,
@@ -31,10 +36,13 @@ onMounted(async () => {
 
 watch(() => route.params.typeName, async (newTypeName) => {
   categoryType.value = newTypeName || '';
+  currentPage.value = 1;
   await matchTypeNameToId();
   await fetchItemsByType();
   clearFilters();
 });
+
+watch(currentPage, () => fetchItemsByType());
 
 async function fetchProductTypes() {
   try {
@@ -56,8 +64,13 @@ async function fetchItemsByType() {
   try {
     isLoading.value = true;
     errorMessage.value = '';
-    const response = await axios.get(`/items/type/${productTypeId.value}`);
-    items.value = Array.isArray(response.data) ? response.data : [];
+    const response = await axios.get(`/items/type/${productTypeId.value}`, {
+      params: { page: currentPage.value, limit: itemsPerPage },
+    });
+    const payload = response.data;
+    items.value = Array.isArray(payload.data) ? payload.data : [];
+    totalPages.value = payload.totalPages ?? 1;
+    totalItems.value = payload.total ?? items.value.length;
   } catch (error) {
     console.error('Failed to fetch items:', error);
     errorMessage.value = 'Failed to load items';
@@ -65,6 +78,11 @@ async function fetchItemsByType() {
   } finally {
     isLoading.value = false;
   }
+}
+
+function onPageChange(page) {
+  currentPage.value = page;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 async function fetchLikedItems() {
@@ -109,8 +127,8 @@ async function fetchLikedItems() {
           @clear="clearFilters"
         />
 
-        <p v-if="filteredItems.length !== items.length" class="result-count">
-          Showing {{ filteredItems.length }} of {{ items.length }} items
+        <p v-if="filteredItems.length !== items.length || totalPages > 1" class="result-count">
+          Showing {{ filteredItems.length }} of {{ totalItems }} items
         </p>
 
         <div v-if="!filteredItems.length" class="empty-state">
@@ -126,6 +144,14 @@ async function fetchLikedItems() {
             :likedItems="likedItems"
           />
         </div>
+
+        <Pagination
+          :page="currentPage"
+          :totalPages="totalPages"
+          :total="totalItems"
+          :limit="itemsPerPage"
+          @update:page="onPageChange"
+        />
       </template>
     </div>
   </div>

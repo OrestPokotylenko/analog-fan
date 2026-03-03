@@ -119,4 +119,29 @@ class UserController {
             throw new Exception('Invalid token.', 401);
         }
     }
+
+    /**
+     * Check whether the authenticated user has the admin role.
+     */
+    public function isAdmin(int $userId): bool {
+        $user = $this->userModel->getUserById($userId);
+        return $user && ($user['role'] ?? '') === 'admin';
+    }
+
+    public function deleteUser(int $userId): bool {
+        // Get user data to delete their image from Cloudinary if it exists
+        $user = $this->userModel->getUserById($userId);
+        
+        if (!$user) {
+            throw new Exception('User not found', 404);
+        }
+        
+        // Delete user's profile image from Cloudinary if it exists
+        if (!empty($user['imageUrl'])) {
+            $this->cloudinaryService->deleteImage($user['imageUrl']);
+        }
+        
+        // Delete user from database
+        return $this->userModel->deleteUser($userId);
+    }
 }

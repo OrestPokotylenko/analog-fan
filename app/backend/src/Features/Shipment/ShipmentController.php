@@ -557,18 +557,38 @@ class ShipmentController {
                 'delivery_status' => $deliveryStatus,
             ];
 
-            if ($deliveryStatus === 'delivered' && !$shipment['delivered_at']) {
-                $updateData['delivered_at'] = date('Y-m-d H:i:s');
-                $this->orderModel->updateOrder($shipment['order_id'], [
-                    'order_status' => 'delivered',
-                    'delivered_at' => $updateData['delivered_at'],
-                ]);
-            } elseif (in_array($deliveryStatus, ['transit', 'out_for_delivery']) && !$shipment['shipped_at']) {
-                $updateData['shipped_at'] = date('Y-m-d H:i:s');
-                $this->orderModel->updateOrder($shipment['order_id'], [
-                    'order_status' => 'shipped',
-                    'shipped_at' => $updateData['shipped_at'],
-                ]);
+            $orderUpdateData = [];
+            switch ($deliveryStatus) {
+                case 'delivered':
+                    if (!$shipment['delivered_at']) {
+                        $updateData['delivered_at'] = date('Y-m-d H:i:s');
+                        $orderUpdateData['delivered_at'] = $updateData['delivered_at'];
+                    }
+                    $orderUpdateData['order_status'] = 'delivered';
+                    break;
+
+                case 'transit':
+                case 'out_for_delivery':
+                    if (!$shipment['shipped_at']) {
+                        $updateData['shipped_at'] = date('Y-m-d H:i:s');
+                        $orderUpdateData['shipped_at'] = $updateData['shipped_at'];
+                    }
+                    $orderUpdateData['order_status'] = 'shipped';
+                    break;
+
+                case 'label_created':
+                case 'pre_transit':
+                    $orderUpdateData['order_status'] = 'processing';
+                    break;
+
+                case 'failure':
+                case 'returned':
+                    $orderUpdateData['order_status'] = 'cancelled';
+                    break;
+            }
+
+            if (!empty($orderUpdateData)) {
+                $this->orderModel->updateOrder($shipment['order_id'], $orderUpdateData);
             }
 
             $result = $this->shipmentModel->updateShipment($shipment['id'], $updateData);
@@ -624,24 +644,42 @@ class ShipmentController {
             }
             
             $updateData = ['delivery_status' => $data['status']];
+            $orderUpdateData = [];
             
-            // Update timestamps based on status
-            if ($data['status'] === 'delivered' && !$shipment['delivered_at']) {
-                $updateData['delivered_at'] = date('Y-m-d H:i:s');
-                
-                // Update order status
-                $this->orderModel->updateOrder($shipment['order_id'], [
-                    'order_status' => 'delivered',
-                    'delivered_at' => $updateData['delivered_at'],
-                ]);
-            } elseif (in_array($data['status'], ['transit', 'out_for_delivery']) && !$shipment['shipped_at']) {
-                $updateData['shipped_at'] = date('Y-m-d H:i:s');
-                
-                // Update order status
-                $this->orderModel->updateOrder($shipment['order_id'], [
-                    'order_status' => 'shipped',
-                    'shipped_at' => $updateData['shipped_at'],
-                ]);
+            // Map delivery status to order status and set timestamps
+            switch ($data['status']) {
+                case 'delivered':
+                    if (!$shipment['delivered_at']) {
+                        $updateData['delivered_at'] = date('Y-m-d H:i:s');
+                        $orderUpdateData['delivered_at'] = $updateData['delivered_at'];
+                    }
+                    $orderUpdateData['order_status'] = 'delivered';
+                    break;
+                    
+                case 'transit':
+                case 'out_for_delivery':
+                    if (!$shipment['shipped_at']) {
+                        $updateData['shipped_at'] = date('Y-m-d H:i:s');
+                        $orderUpdateData['shipped_at'] = $updateData['shipped_at'];
+                    }
+                    $orderUpdateData['order_status'] = 'shipped';
+                    break;
+                    
+                case 'label_created':
+                case 'pre_transit':
+                    $orderUpdateData['order_status'] = 'processing';
+                    break;
+                    
+                case 'failure':
+                case 'returned':
+                    // Map failed deliveries to cancelled order status
+                    $orderUpdateData['order_status'] = 'cancelled';
+                    break;
+            }
+            
+            // Always update order status
+            if (!empty($orderUpdateData)) {
+                $this->orderModel->updateOrder($shipment['order_id'], $orderUpdateData);
             }
             
             $result = $this->shipmentModel->updateShipment($shipmentId, $updateData);

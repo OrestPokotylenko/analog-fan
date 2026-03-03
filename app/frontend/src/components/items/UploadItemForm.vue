@@ -126,14 +126,14 @@ async function postItem(data) {
 
 function validateImages(event) {
   const selectedFiles = Array.from(event.target.files);
-  const validExtensions = ['image/png', 'image/jpeg'];
+  const validExtensions = ['image/png', 'image/jpeg', 'image/webp'];
 
   const validFiles = selectedFiles.filter((file) =>
     validExtensions.includes(file.type)
   );
 
   if (validFiles.length !== selectedFiles.length) {
-    imageError.value = 'Some files were skipped. Only PNG and JPG files are allowed.';
+    imageError.value = 'Some files were skipped. Only PNG, JPG, and WebP files are allowed.';
     setTimeout(() => { imageError.value = ''; }, 4000);
   }
 
@@ -255,7 +255,7 @@ function validateQuantity() {
                     id="quantity"
                     v-model="quantity" 
                     type="number"
-                    min="1"
+                    :min="1"
                     placeholder="e.g., 5" 
                     required 
                 />
@@ -297,7 +297,7 @@ function validateQuantity() {
                         type="file" 
                         multiple 
                         class="file-input"
-                        accept=".png, .jpg, .jpeg" 
+                        accept=".png, .jpg, .jpeg, .webp" 
                         @change="validateImages" 
                     />
                     <div class="file-input-label">

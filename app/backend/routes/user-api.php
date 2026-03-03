@@ -73,6 +73,22 @@ Route::add('/api/users/{id}', function($id) use ($userController) {
     }
 }, 'put');
 
+Route::add('/api/users/{id}', function($id) use ($userController) {
+    try {
+        $result = $userController->deleteUser($id);
+        if ($result) {
+            echo json_encode(['success' => true, 'message' => 'User deleted successfully']);
+        } else {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to delete user']);
+        }
+    } catch (\Throwable $e) {
+        $code = $e->getCode() === 404 ? 404 : 500;
+        http_response_code($code);
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+}, 'delete');
+
 Route::add('/api/authenticate', function () use ($userController) {
     $body = json_decode(file_get_contents('php://input'), true);
     $username = $body['username'] ?? '';
@@ -142,4 +158,3 @@ Route::add('/api/reset-password', function () use ($passwordResetService) {
     $passwordResetService->resetPassword($data['token'], $data['password']);
     echo json_encode(['success' => true, 'message' => 'Password reset successfully']);
 }, 'put');
-

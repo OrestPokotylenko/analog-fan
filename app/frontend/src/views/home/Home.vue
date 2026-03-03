@@ -1,15 +1,20 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import axios from '../../services/axiosConfig';
 import Header from '../../components/layout/Header.vue';
 import ItemsGrid from '../../components/ui/ItemsGrid.vue';
 import ItemCard from '../../components/common/ItemCard.vue';
 import FilterPanel from '../../components/items/FilterPanel.vue';
+import Pagination from '../../components/ui/Pagination.vue';
 import { useItemFilters } from '../../composables/useItemFilters';
 
 const items = ref([]);
 const likedItems = ref([]);
 const productTypes = ref([]);
+const currentPage = ref(1);
+const totalPages = ref(1);
+const totalItems = ref(0);
+const itemsPerPage = 20;
 
 const {
   minPrice, maxPrice, selectedConditions, selectedTypes,
@@ -20,13 +25,25 @@ onMounted(async () => {
   await Promise.all([fetchItems(), fetchLikedItems(), fetchProductTypes()]);
 });
 
+watch(currentPage, () => fetchItems());
+
 async function fetchItems() {
   try {
-    const response = await axios.get('/items');
-    items.value = response.data;
+    const response = await axios.get('/items', {
+      params: { page: currentPage.value, limit: itemsPerPage },
+    });
+    const payload = response.data;
+    items.value = payload.data;
+    totalPages.value = payload.totalPages;
+    totalItems.value = payload.total;
   } catch (error) {
     console.error('Failed to fetch items:', error);
   }
+}
+
+function onPageChange(page) {
+  currentPage.value = page;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 async function fetchProductTypes() {
@@ -67,8 +84,8 @@ async function fetchLikedItems() {
             <h2 class="section-title">Featured Items</h2>
             <p class="section-subtitle">Explore our latest collection</p>
           </div>
-          <p v-if="activeFilterCount" class="result-count">
-            {{ filteredItems.length }} of {{ items.length }} items
+          <p v-if="activeFilterCount || totalPages > 1" class="result-count">
+            {{ filteredItems.length }} of {{ totalItems }} items
           </p>
         </div>
 
@@ -89,6 +106,14 @@ async function fetchLikedItems() {
           :liked-items="likedItems"
           :card-component="ItemCard"
           :empty-message="activeFilterCount ? 'No items match your filters.' : 'No items available yet.'"
+        />
+
+        <Pagination
+          :page="currentPage"
+          :totalPages="totalPages"
+          :total="totalItems"
+          :limit="itemsPerPage"
+          @update:page="onPageChange"
         />
       </div>
     </section>

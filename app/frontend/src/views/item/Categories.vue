@@ -51,8 +51,9 @@ async function fetchItemsBySearch(term) {
     isSearching.value = true;
     searchError.value = '';
     clearFilters();
-    const response = await axios.get('/items');
-    const allItems = Array.isArray(response.data) ? response.data : [];
+    const response = await axios.get('/items', { params: { page: 1, limit: 1000 } });
+    const payload = response.data;
+    const allItems = Array.isArray(payload) ? payload : (payload.data ?? []);
     rawSearchItems.value = allItems.filter((item) => {
       const title       = String(item.title       ?? '').toLowerCase();
       const description = String(item.description ?? '').toLowerCase();

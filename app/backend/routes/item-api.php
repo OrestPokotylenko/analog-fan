@@ -188,7 +188,8 @@ Route::add('/api/items/{id}', function ($id) use ($itemController, $userControll
     try {
         $id = (int)$id;
         $userId = $userController->getAuthenticatedUser();
-        $itemController->deleteItem($id, $userId);
+        $isAdmin = $userController->isAdmin($userId);
+        $itemController->deleteItem($id, $userId, $isAdmin);
 
         echo json_encode([
             'success' => true,

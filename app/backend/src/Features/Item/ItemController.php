@@ -86,14 +86,14 @@ class ItemController {
         return $this->itemModel->updateItem($id, $userId, $title, $description, $price, $type, $imagesPath, $quantity, $condition, $genre ?: null);
     }
 
-    public function deleteItem($id, $userId) {
+    public function deleteItem($id, $userId, $isAdmin = false) {
         $item = $this->fetchItemById($id);
         if (!$item) {
             throw new Exception('Item not found', 404);
         }
 
         $itemArray = is_array($item) ? $item : (array)$item;
-        if (($itemArray['userId'] ?? null) !== $userId) {
+        if (!$isAdmin && ($itemArray['userId'] ?? null) !== $userId) {
             throw new Exception('Unauthorized', 403);
         }
 

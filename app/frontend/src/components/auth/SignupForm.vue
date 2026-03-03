@@ -57,9 +57,14 @@
 </template>
 
 <script>
+import { inject } from 'vue';
 import axios from '../../services/axiosConfig';
 
 export default {
+  setup() {
+    const $auth = inject('$auth');
+    return { $auth };
+  },
   data() {
     return {
       firstName: '',
@@ -86,13 +91,26 @@ export default {
         this.errorMessage = '';
         const response = await this.registerUser();
         if (response.data.success) {
-          await this.authenticateUser();
-          this.$router.push('/');
+          // Registration response already includes token and user
+          localStorage.setItem('jwtToken', response.data.token);
+          localStorage.setItem('user', JSON.stringify(response.data.user));
+
+          // Update global auth state
+          if (this.$auth) {
+            this.$auth.isLoggedIn = true;
+            this.$auth.token = response.data.token;
+            this.$auth.user = response.data.user;
+          }
+
+          // Navigate and force reload to ensure header updates
+          await this.$router.push('/');
+          window.location.reload();
         } else {
           this.errorMessage = response.data.message;
         }
       } catch (error) {
-        this.errorMessage = 'Error during registration. Please try again.';
+        console.error('Registration error:', error);
+        this.errorMessage = error.response?.data?.message || 'Error during registration. Please try again.';
       } finally {
         this.isSigningUp = false;
       }
@@ -106,23 +124,6 @@ export default {
         password: this.password,
         repeatPassword: this.repeatPassword,
       });
-    },
-    async authenticateUser() {
-      const response = await axios.get('/authenticate', {
-        params: {
-          username: this.username,
-          password: this.password
-        }
-      });
-
-      // Store the token and user in localStorage for persistence
-      localStorage.setItem('jwtToken', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-
-      // Update global properties
-      this.$root.$auth.isLoggedIn = true;
-      this.$root.$auth.token = response.data.token;
-      this.$root.$auth.user = response.data.user;
     }
   }
 };

@@ -4,17 +4,17 @@
 
 ### User 1 (Buyer/Seller)
 **Note:** This user can both buy and sell items.
-- **Username:** `_________________`
-- **Password:** `_________________`
+- **Username:** `user1`
+- **Password:** `12345`
 
 ### User 2 (Buyer/Seller)
 **Note:** This user can both buy and sell items.
-- **Username:** `_________________`
-- **Password:** `_________________`
+- **Username:** `user2`
+- **Password:** `12345`
 
 ### Admin
-- **Username:** `_________________`
-- **Password:** `_________________`
+- **Username:** `admin`
+- **Password:** `12345`
 
 ---
 

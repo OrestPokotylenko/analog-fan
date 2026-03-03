@@ -18,9 +18,14 @@ class UserModel extends BaseModel {
     }
 
     public function getUsers() {
-        $sql = "SELECT user_id, first_name, last_name, username, email, role, phone_number, image_url, created_at FROM users";
-        $stmt = $this->pdo->query($sql);
-        $stmt->execute();
+        $p = $this->getPaginationParams();
+
+        $countStmt = $this->pdo->query("SELECT COUNT(*) FROM users");
+        $total = (int)$countStmt->fetchColumn();
+
+        $sql = "SELECT user_id, first_name, last_name, username, email, role, phone_number, image_url, created_at FROM users ORDER BY created_at DESC LIMIT ? OFFSET ?";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$p['limit'], $p['offset']]);
         $usersData = $stmt->fetchAll();
 
         $users = [];
@@ -40,7 +45,7 @@ class UserModel extends BaseModel {
             $users[] = $user->toArray();
         }
 
-        return $users;
+        return $this->paginatedResponse($users, $total, $p['page'], $p['limit']);
     }
 
     public function getUserById(int $userId) {
@@ -160,5 +165,11 @@ class UserModel extends BaseModel {
         }
 
         return null;
+    }
+
+    public function deleteUser(int $userId): bool {
+        $sql = "DELETE FROM users WHERE user_id = :user_id";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute(['user_id' => $userId]);
     }
 }

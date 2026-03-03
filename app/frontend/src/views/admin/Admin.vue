@@ -68,15 +68,23 @@ async function loadData() {
   try {
     isLoading.value = true;
     const [usersRes, itemsRes, typesRes, ordersRes, shipmentsRes] = await Promise.all([
-      axios.get('/users'), axios.get('/items'), axios.get('/product-types'),
+      axios.get('/users', { params: { page: 1, limit: 100 } }),
+      axios.get('/items', { params: { page: 1, limit: 100 } }),
+      axios.get('/product-types'),
       OrderService.getAllOrders(), axios.get('/shipments/admin'),
     ]);
-    users.value = usersRes.data;
-    items.value = itemsRes.data;
+    users.value = usersRes.data.data ?? usersRes.data;
+    items.value = itemsRes.data.data ?? itemsRes.data;
     productTypes.value = typesRes.data;
     orders.value = ordersRes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     shipments.value = shipmentsRes.data.data || [];
-    stats.value = { totalUsers: users.value.length, totalItems: items.value.length, totalProductTypes: productTypes.value.length, totalOrders: orders.value.length, totalShipments: shipments.value.length };
+    stats.value = {
+      totalUsers: usersRes.data.total ?? users.value.length,
+      totalItems: itemsRes.data.total ?? items.value.length,
+      totalProductTypes: productTypes.value.length,
+      totalOrders: orders.value.length,
+      totalShipments: shipments.value.length,
+    };
   } catch (e) { console.error('Failed to load admin data:', e); }
   finally { isLoading.value = false; }
 }

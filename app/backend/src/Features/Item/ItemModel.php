@@ -15,15 +15,29 @@ class ItemModel extends BaseModel {
     private const LIST_COLUMNS = 'item_id, user_id, title, price, product_type_id, item_condition, genre, images';
 
     public function getItems($userId = null) {
+        $p = $this->getPaginationParams();
+
         if ($userId === null) {
-            $stmt = $this->pdo->prepare("SELECT " . self::LIST_COLUMNS . " FROM {$this->table}");
-            $stmt->execute();
+            $countStmt = $this->pdo->prepare("SELECT COUNT(*) FROM {$this->table} WHERE quantity > 0");
+            $countStmt->execute();
+            $total = (int)$countStmt->fetchColumn();
+
+            $stmt = $this->pdo->prepare("SELECT " . self::LIST_COLUMNS . " FROM {$this->table} WHERE quantity > 0 ORDER BY creation_date DESC LIMIT ? OFFSET ?");
+            $stmt->execute([$p['limit'], $p['offset']]);
         } else {
-            $stmt = $this->pdo->prepare("SELECT " . self::LIST_COLUMNS . " FROM {$this->table} WHERE user_id != ?");
-            $stmt->execute([$userId]);
+            $countStmt = $this->pdo->prepare("SELECT COUNT(*) FROM {$this->table} WHERE user_id != ? AND quantity > 0");
+            $countStmt->execute([$userId]);
+            $total = (int)$countStmt->fetchColumn();
+
+            $stmt = $this->pdo->prepare("SELECT " . self::LIST_COLUMNS . " FROM {$this->table} WHERE user_id != ? AND quantity > 0 ORDER BY creation_date DESC LIMIT ? OFFSET ?");
+            $stmt->execute([$userId, $p['limit'], $p['offset']]);
         }
+
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        return array_map([$this, 'normalizeSummaryRow'], $rows);
+        return $this->paginatedResponse(
+            array_map([$this, 'normalizeSummaryRow'], $rows),
+            $total, $p['page'], $p['limit']
+        );
     }
 
     public function fetchItemById($id) {
@@ -34,10 +48,20 @@ class ItemModel extends BaseModel {
     }
 
     public function fetchUserItems($userId) {
-        $stmt = $this->pdo->prepare("SELECT " . self::LIST_COLUMNS . " FROM {$this->table} WHERE user_id = ?");
-        $stmt->execute([$userId]);
+        $p = $this->getPaginationParams();
+
+        $countStmt = $this->pdo->prepare("SELECT COUNT(*) FROM {$this->table} WHERE user_id = ?");
+        $countStmt->execute([$userId]);
+        $total = (int)$countStmt->fetchColumn();
+
+        $stmt = $this->pdo->prepare("SELECT " . self::LIST_COLUMNS . " FROM {$this->table} WHERE user_id = ? ORDER BY creation_date DESC LIMIT ? OFFSET ?");
+        $stmt->execute([$userId, $p['limit'], $p['offset']]);
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        return array_map([$this, 'normalizeSummaryRow'], $rows);
+
+        return $this->paginatedResponse(
+            array_map([$this, 'normalizeSummaryRow'], $rows),
+            $total, $p['page'], $p['limit']
+        );
     }
 
     public function postItem($userId, $title, $description, $price, $type, $imagesPath, $quantity = 1, $condition = 'good', $genre = null) {
@@ -89,10 +113,20 @@ class ItemModel extends BaseModel {
     }
 
     public function getItemsByType($type) {
-        $stmt = $this->pdo->prepare("SELECT " . self::LIST_COLUMNS . " FROM {$this->table} WHERE product_type_id = ?");
-        $stmt->execute([$type]);
+        $p = $this->getPaginationParams();
+
+        $countStmt = $this->pdo->prepare("SELECT COUNT(*) FROM {$this->table} WHERE product_type_id = ? AND quantity > 0");
+        $countStmt->execute([$type]);
+        $total = (int)$countStmt->fetchColumn();
+
+        $stmt = $this->pdo->prepare("SELECT " . self::LIST_COLUMNS . " FROM {$this->table} WHERE product_type_id = ? AND quantity > 0 ORDER BY creation_date DESC LIMIT ? OFFSET ?");
+        $stmt->execute([$type, $p['limit'], $p['offset']]);
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        return array_map([$this, 'normalizeSummaryRow'], $rows);
+
+        return $this->paginatedResponse(
+            array_map([$this, 'normalizeSummaryRow'], $rows),
+            $total, $p['page'], $p['limit']
+        );
     }
 
     public function decrementQuantity($itemId, $quantity) {
